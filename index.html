@@ -82,7 +82,7 @@
   .btn:disabled{opacity:.5;cursor:default;filter:none}
 
   .add{
-    margin-top:14px;padding:16px;background:var(--panel);
+    margin-top:28px;padding:16px;background:var(--panel);
     border:1px solid var(--line);border-radius:var(--r);
   }
   .add .head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
@@ -135,6 +135,7 @@
   .row2 .desc{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 
   .voters{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+  .voters .vlabel{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-right:3px}
   .chip{
     font-size:11px;color:var(--muted);background:var(--card-2);
     border:1px solid var(--line-soft);border-radius:20px;padding:2px 9px;
@@ -204,6 +205,8 @@
 
   <div class="ident" id="ident"></div>
 
+  <div class="board" id="board"></div>
+
   <div class="add">
     <div class="head">
       <h2>Add a game</h2>
@@ -215,8 +218,6 @@
     </div>
     <div class="hint">Example: <code>https://store.steampowered.com/app/1245620/ELDEN_RING/</code></div>
   </div>
-
-  <div class="board" id="board"></div>
 </div>
 
 <div id="toast"></div>
@@ -365,7 +366,7 @@ async function render(force){
     const board = document.getElementById("board");
     if(list.length === 0){
       board.innerHTML = `<div class="empty"><div class="big">No games on the board yet</div>`+
-        `Paste a Steam store link above to nominate the first one.</div>`;
+        `Paste a Steam store link below to nominate the first one.</div>`;
       return;
     }
     board.innerHTML = list.map((g,i) => i===0 ? champCard(g) : rowCard(g,i+1)).join("");
@@ -383,8 +384,8 @@ function voteBtn(g){
          `<span class="v-on">${voted?"Voted ✓":"Vote"}</span><span class="v-off">Remove vote</span></button>`;
 }
 function voterChips(g){
-  if(g.voterIds.length === 0) return `<div class="voters"><span class="chip none">no votes yet</span></div>`;
-  return `<div class="voters">`+ g.voterIds.map(id => {
+  if(g.voterIds.length === 0) return `<div class="voters"><span class="vlabel">Voted by</span><span class="chip none">no one yet</span></div>`;
+  return `<div class="voters"><span class="vlabel">Voted by</span>`+ g.voterIds.map(id => {
     const n = VOTER_MAP[id] || "?";
     return `<span class="chip"><span class="pip">${esc(initials(n))}</span>${esc(n)}</span>`;
   }).join("") +`</div>`;
