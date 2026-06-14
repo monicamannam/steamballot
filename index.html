@@ -225,18 +225,16 @@
 
 <div id="toast"></div>
 
+<!-- Your Supabase credentials (kept in a separate file so app updates don't wipe them) -->
+<script src="config.js"></script>
 <!-- Supabase client (browser build) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ============ CONFIG — fill these in, then redeploy ============ */
-/* Supabase dashboard -> Project Settings -> API.
-   The "anon public" key is meant to live in client code; the DB is
-   protected by the Row Level Security policies in schema.sql.        */
-const SUPABASE_URL      = "https://YOUR-PROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
-/* ============================================================== */
+/* Credentials come from config.js (window.SUPABASE_URL / window.SUPABASE_ANON_KEY). */
+const SUPABASE_URL      = window.SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
 
-const CONFIGURED = !/YOUR-PROJECT|YOUR-ANON/.test(SUPABASE_URL + SUPABASE_ANON_KEY);
+const CONFIGURED = !!(SUPABASE_URL && SUPABASE_ANON_KEY) && !/YOUR-PROJECT|YOUR-ANON/.test(SUPABASE_URL + SUPABASE_ANON_KEY);
 let sb = null;
 
 /* remember which voter this device is (fine now — not in the artifact sandbox) */
@@ -561,7 +559,7 @@ document.getElementById("refreshBtn").onclick = async () => {
 (async function init(){
   if(!CONFIGURED){
     document.getElementById("ident").innerHTML = `<span class="label">Supabase isn't configured yet.</span>`;
-    document.getElementById("board").innerHTML = banner("Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> near the top of index.html, then redeploy.");
+    document.getElementById("board").innerHTML = banner("Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in <code>config.js</code>, then redeploy.");
     return;
   }
   if(!window.supabase || !window.supabase.createClient){
