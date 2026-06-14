@@ -267,10 +267,10 @@ function prettySlug(slug){ return slug ? slug.replace(/[_\-]+/g," ").replace(/\s
    the newer store_item_assets path that "Coming Soon" titles use. */
 function imgCandidates(appid, stored){
   const c = [];
-  if(stored) c.push(stored);
-  c.push("https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/"+appid+"/header.jpg");
-  c.push("https://cdn.cloudflare.steamstatic.com/steam/apps/"+appid+"/header.jpg");
-  c.push("https://steamcdn-a.akamaihd.net/steam/apps/"+appid+"/header.jpg");
+  if(stored) c.push(stored);                                                                              // real URL from Steam's API
+  c.push("https://cdn.cloudflare.steamstatic.com/steam/apps/"+appid+"/header.jpg");                       // standard path (works for released games)
+  c.push("https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/"+appid+"/header.jpg");  // newer path some titles use
+  c.push("https://cdn.akamai.steamstatic.com/steam/apps/"+appid+"/header.jpg");                           // akamai mirror
   return c;
 }
 const BLANK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
