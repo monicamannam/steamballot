@@ -1,0 +1,531 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Backlog Ballot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d141d; --ink-2:#101a25;
+    --panel:#16212e; --card:#1b2836; --card-2:#21303f;
+    --line:#2a3a4c; --line-soft:#223040;
+    --text:#e8eef4; --muted:#90a4b8; --faint:#5f7387;
+    --accent:#66c0f4; --accent-deep:#3a9bd6; --accent-ink:#06283b;
+    --gold:#f6c453; --gold-soft:#caa23f; --gold-glow:rgba(246,196,83,.18);
+    --danger:#e8736a;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:Inter,system-ui,-apple-system,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 520px at 50% -8%, #1a2a3b 0%, transparent 60%),
+      linear-gradient(180deg,var(--ink) 0%, var(--ink-2) 100%);
+    background-attachment:fixed;
+    min-height:100vh; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:28px 18px 80px}
+  a{color:var(--accent); text-decoration:none}
+
+  .eyebrow{
+    font-family:"Chakra Petch",sans-serif; font-weight:600;
+    letter-spacing:.32em; text-transform:uppercase; font-size:12px;
+    color:var(--accent); display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  h1{
+    font-family:"Chakra Petch",sans-serif; font-weight:700;
+    font-size:clamp(34px,8vw,52px); line-height:.98; letter-spacing:-.01em;
+    margin:.28em 0 .15em;
+  }
+  .tagline{color:var(--muted); font-size:14.5px; max-width:46ch}
+
+  .ident{
+    margin-top:18px; padding:12px 14px; background:var(--panel);
+    border:1px solid var(--line); border-radius:var(--r);
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .ident .label{font-size:13px;color:var(--muted)}
+  .ident code{background:var(--card);padding:2px 6px;border-radius:6px;color:var(--muted);font-size:12px}
+  .who{display:flex;align-items:center;gap:9px}
+  .who .badge{
+    width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+    font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:12px;
+    background:var(--accent);color:var(--accent-ink);
+  }
+  .who .name{font-weight:600;font-size:14.5px}
+  .linkbtn{background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;padding:4px 2px;font-family:inherit}
+  .linkbtn:hover{text-decoration:underline}
+  .pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%}
+  select,input[type=text]{
+    font-family:inherit;font-size:14.5px;color:var(--text);
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;outline:none;
+  }
+  select:focus-visible,input[type=text]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(102,192,244,.18)}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%2390a4b8' viewBox='0 0 16 16'><path d='M4 6l4 4 4-4'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+
+  .btn{
+    font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.02em;
+    font-size:14px;cursor:pointer;border-radius:10px;padding:9px 16px;
+    border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+    transition:filter .15s ease, transform .05s ease;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  .btn.ghost:hover{background:rgba(102,192,244,.10)}
+  .btn:disabled{opacity:.5;cursor:default;filter:none}
+
+  .add{
+    margin-top:14px;padding:16px;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--r);
+  }
+  .add .head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .add .head h2{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;margin:0;color:var(--text)}
+  .add .head .refresh{display:flex;align-items:center;gap:8px;color:var(--faint);font-size:12px}
+  .add .row{display:flex;gap:9px}
+  .add input{flex:1;min-width:0}
+  .hint{margin-top:9px;font-size:12px;color:var(--faint)}
+  .hint code{background:var(--card);padding:2px 6px;border-radius:6px;color:var(--muted);font-size:11.5px}
+
+  .board{margin-top:24px;display:flex;flex-direction:column;gap:12px}
+
+  .empty{
+    text-align:center;padding:48px 20px;border:1px dashed var(--line);
+    border-radius:var(--r);color:var(--muted);
+  }
+  .empty .big{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:18px;color:var(--text);margin-bottom:6px}
+  .empty code{background:var(--card);padding:2px 6px;border-radius:6px;color:var(--accent);font-size:12.5px}
+
+  .card{
+    background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r);
+    position:relative;overflow:hidden;
+    animation:rise .35s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .champ{
+    border-color:var(--gold-soft);
+    box-shadow:0 0 0 1px var(--gold-soft), 0 18px 50px -22px var(--gold-glow);
+    background:linear-gradient(180deg,#20283180 0%, var(--card) 60%);
+  }
+  .champ .crownrow{
+    display:flex;align-items:center;gap:8px;padding:11px 16px 0;
+    font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.22em;
+    font-size:11.5px;text-transform:uppercase;color:var(--gold);
+  }
+  .champ .crownrow svg{filter:drop-shadow(0 0 6px var(--gold-glow))}
+  .champ .body{display:grid;grid-template-columns:300px 1fr;gap:0}
+  .champ .art{aspect-ratio:460/215;width:100%;height:100%;object-fit:cover;display:block;background:#0f1922}
+  .champ .meta{padding:16px 18px 18px;display:flex;flex-direction:column;justify-content:center;gap:8px}
+  .champ .title{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:24px;line-height:1.05;letter-spacing:-.01em}
+  .champ .desc{color:var(--muted);font-size:13.5px;line-height:1.45}
+  .champ .scorewrap .num{color:var(--gold)}
+
+  .row2{display:grid;grid-template-columns:auto 132px 1fr auto;align-items:center;gap:14px;padding:12px 16px}
+  .rank{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:18px;color:var(--faint);width:30px;text-align:center}
+  .thumb{width:132px;aspect-ratio:460/215;border-radius:8px;object-fit:cover;display:block;background:#0f1922;border:1px solid var(--line-soft)}
+  .row2 .info{min-width:0}
+  .row2 .title{font-weight:600;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row2 .desc{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+
+  .voters{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+  .chip{
+    font-size:11px;color:var(--muted);background:var(--card-2);
+    border:1px solid var(--line-soft);border-radius:20px;padding:2px 9px;
+    display:inline-flex;align-items:center;gap:5px;
+  }
+  .chip .pip{width:14px;height:14px;border-radius:50%;display:grid;place-items:center;font-size:8px;font-weight:700;font-family:"Chakra Petch",sans-serif;background:var(--accent);color:var(--accent-ink)}
+  .chip.none{color:var(--faint);background:transparent;border-style:dashed}
+
+  .controls{display:flex;align-items:center;gap:16px}
+  .scorewrap{text-align:center;min-width:46px}
+  .scorewrap .num{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--accent)}
+  .scorewrap .cap{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-top:3px}
+
+  .vote{
+    font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.02em;font-size:13.5px;
+    cursor:pointer;border-radius:10px;padding:9px 15px;min-width:104px;text-align:center;
+    border:1px solid var(--accent);background:transparent;color:var(--accent);
+    transition:background .15s ease, color .15s ease, border-color .15s ease, transform .05s ease;
+  }
+  .vote:hover{background:rgba(102,192,244,.12)}
+  .vote:active{transform:translateY(1px)}
+  .vote.voted{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .vote .v-off{display:none}
+  .vote.voted .v-on{display:inline}
+  .vote.voted:hover{background:var(--danger);border-color:var(--danger);color:#2a0e0b}
+  .vote.voted:hover .v-on{display:none}
+  .vote.voted:hover .v-off{display:inline}
+  .vote:disabled{opacity:.45;cursor:default;background:transparent}
+
+  .kill{
+    position:absolute;top:9px;right:10px;width:24px;height:24px;border-radius:7px;
+    border:1px solid transparent;background:transparent;color:var(--faint);
+    cursor:pointer;font-size:15px;line-height:1;display:grid;place-items:center;z-index:2;
+  }
+  .kill:hover{color:var(--danger);background:rgba(232,115,106,.12)}
+
+  .added{font-size:11px;color:var(--faint);margin-top:8px}
+
+  #toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);
+    background:var(--card-2);border:1px solid var(--line);color:var(--text);
+    padding:11px 18px;border-radius:12px;font-size:13.5px;box-shadow:0 14px 40px -16px #000;
+    opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;max-width:90vw;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media (max-width:560px){
+    .champ .body{grid-template-columns:1fr}
+    .champ .meta{padding:14px 16px 16px}
+    .row2{grid-template-columns:auto 100px 1fr;grid-template-areas:"rank thumb info" "ctrl ctrl ctrl";row-gap:10px}
+    .rank{grid-area:rank}.thumb{grid-area:thumb;width:100px}.row2 .info{grid-area:info}
+    .controls{grid-area:ctrl;justify-content:space-between;border-top:1px solid var(--line-soft);padding-top:10px}
+    .vote{flex:1}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span><span>Steam Showdown · 4 players</span></div>
+  <h1>The Backlog Ballot</h1>
+  <p class="tagline">Paste a Steam store link to nominate a game. Each of you gets one vote per game — the board ranks them live.</p>
+
+  <div class="ident" id="ident"></div>
+
+  <div class="add">
+    <div class="head">
+      <h2>Add a game</h2>
+      <div class="refresh"><span id="syncState">Synced</span> <button class="linkbtn" id="refreshBtn" title="Refresh from everyone">Refresh</button></div>
+    </div>
+    <div class="row">
+      <input type="text" id="urlInput" placeholder="https://store.steampowered.com/app/…" autocomplete="off" spellcheck="false">
+      <button class="btn" id="addBtn">Add game</button>
+    </div>
+    <div class="hint">Example: <code>https://store.steampowered.com/app/1245620/ELDEN_RING/</code></div>
+  </div>
+
+  <div class="board" id="board"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Supabase client (browser build) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============ CONFIG — fill these in, then redeploy ============ */
+/* Supabase dashboard -> Project Settings -> API.
+   The "anon public" key is meant to live in client code; the DB is
+   protected by the Row Level Security policies in schema.sql.        */
+const SUPABASE_URL      = 'https://axjdyxxwjqkzjptykjrk.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_bxbvx2jVlmlqx_UgjGBqnA_CicT3EFM'
+/* ============================================================== */
+
+const CONFIGURED = !/YOUR-PROJECT|YOUR-ANON/.test(SUPABASE_URL + SUPABASE_ANON_KEY);
+let sb = null;
+
+/* remember which voter this device is (fine now — not in the artifact sandbox) */
+const SAVED_KEY = "ballot_voter_id";
+const local = {
+  get(k){ try{ return localStorage.getItem(k); }catch(_){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(_){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(_){} }
+};
+
+let ME = null;          // {id, name}
+let VOTERS = [];        // [{id, name}]
+let VOTER_MAP = {};     // id -> name
+
+/* ---------------- steam url parsing ---------------- */
+function parseSteam(raw){
+  const url = (raw||"").trim();
+  let m = url.match(/store\.steampowered\.com\/app\/(\d+)(?:\/([^\/?#]+))?/i);
+  if(m) return { appid:m[1], slug: m[2] ? decodeURIComponent(m[2]) : "" };
+  m = url.match(/\/app\/(\d+)/);
+  if(m) return { appid:m[1], slug:"" };
+  m = url.match(/^(\d{2,8})$/);
+  if(m) return { appid:m[1], slug:"" };
+  return null;
+}
+function prettySlug(slug){ return slug ? slug.replace(/[_\-]+/g," ").replace(/\s+/g," ").trim() : ""; }
+function headerImg(appid){ return "https://cdn.cloudflare.steamstatic.com/steam/apps/"+appid+"/header.jpg"; }
+function altImg(appid){ return "https://steamcdn-a.akamaihd.net/steam/apps/"+appid+"/header.jpg"; }
+
+/* ---------------- metadata via /api/steam (Steam's own API, server-side) ----------------
+   Falls back to the name from the URL if the function isn't deployed or Steam has nothing. */
+async function fetchMeta(appid, fallbackTitle){
+  try{
+    const r = await fetch("/api/steam?appid=" + encodeURIComponent(appid));
+    if(!r.ok) throw new Error("status " + r.status);
+    const d = await r.json();
+    if(d && d.title) return { title: d.title, description: d.description || "" };
+  }catch(e){ console.warn("steam meta fetch failed, using name from link:", e.message); }
+  return null;
+}
+
+/* ---------------- supabase data ---------------- */
+async function loadVoters(){
+  const { data, error } = await sb.from("steamballot_voters").select("id,name").order("name");
+  if(error){ console.error(error); toast("Couldn't load voters: " + error.message); return []; }
+  return data || [];
+}
+async function loadGames(){
+  const { data, error } = await sb.from("steamballot_games")
+    .select("app_id,title,description,slug,submitted_by,enriched,created_at");
+  if(error){ console.error(error); toast("Couldn't load games: " + error.message); return []; }
+  return data || [];
+}
+async function loadVotes(){
+  const { data, error } = await sb.from("steamballot_votes").select("app_id,voter_id");
+  if(error){ console.error(error); return []; }
+  return data || [];
+}
+
+/* ---------------- identity ---------------- */
+async function renderIdent(){
+  const el = document.getElementById("ident");
+  VOTERS = await loadVoters();
+  VOTER_MAP = Object.fromEntries(VOTERS.map(v => [v.id, v.name]));
+  const savedId = local.get(SAVED_KEY);
+  ME = VOTERS.find(v => v.id === savedId) || null;
+
+  if(VOTERS.length === 0){
+    el.innerHTML = `<span class="label">No players yet — add rows to the <code>steamballot_voters</code> table in Supabase, then hit Refresh.</span>`;
+    return;
+  }
+  if(ME){
+    el.innerHTML = whoMarkup(ME) + `<button class="linkbtn" id="changeMe" style="margin-left:auto">Not you?</button>`;
+    document.getElementById("changeMe").onclick = () => { local.del(SAVED_KEY); ME = null; renderPicker(); };
+  }else{
+    renderPicker();
+  }
+}
+function whoMarkup(me){
+  return `<span class="who"><span class="badge">${esc(initials(me.name))}</span>`+
+         `<span><span class="label">You're voting as</span><br><span class="name">${esc(me.name)}</span></span></span>`;
+}
+function renderPicker(){
+  const el = document.getElementById("ident");
+  const opts = VOTERS.map(v => `<option value="${esc(v.id)}">${esc(v.name)}</option>`).join("");
+  el.innerHTML =
+    `<div class="pick"><span class="label">Who's voting?</span>`+
+    `<select id="voterSel"><option value="">— pick your name —</option>${opts}</select>`+
+    `<button class="btn" id="saveMe">Start voting</button></div>`;
+  document.getElementById("saveMe").onclick = async () => {
+    const sel = document.getElementById("voterSel");
+    if(!sel.value){ toast("Pick your name first."); return; }
+    local.set(SAVED_KEY, sel.value);
+    ME = VOTERS.find(v => v.id === sel.value);
+    await renderIdent();
+    await render(true);
+    toast("You're in, " + (ME ? ME.name : "") + ". Cast your votes.");
+  };
+}
+
+/* ---------------- board ---------------- */
+let lastSig = "";
+let refreshing = false;
+
+async function render(force){
+  if(!sb || refreshing) return;
+  refreshing = true;
+  try{
+    const [games, votes] = await Promise.all([loadGames(), loadVotes()]);
+    const byGame = {};
+    for(const v of votes){ (byGame[v.app_id] = byGame[v.app_id] || []).push(v.voter_id); }
+
+    const list = games.map(g => ({
+      appid: g.app_id, title: g.title, desc: g.description, slug: g.slug,
+      submittedBy: g.submitted_by,
+      enriched: g.enriched,
+      addedAt: g.created_at ? Date.parse(g.created_at) : 0,
+      voterIds: byGame[g.app_id] || []
+    }));
+    list.sort((a,b) =>
+      b.voterIds.length - a.voterIds.length ||
+      a.addedAt - b.addedAt ||
+      String(a.title).localeCompare(String(b.title))
+    );
+
+    const sig = JSON.stringify(list.map(g => [g.appid, g.title, g.desc, g.voterIds.slice().sort().join(",")])) + "|" + (ME ? ME.id : "");
+    if(!force && sig === lastSig) return;
+    lastSig = sig;
+
+    const board = document.getElementById("board");
+    if(list.length === 0){
+      board.innerHTML = `<div class="empty"><div class="big">No games on the board yet</div>`+
+        `Paste a Steam store link above to nominate the first one.</div>`;
+      return;
+    }
+    board.innerHTML = list.map((g,i) => i===0 ? champCard(g) : rowCard(g,i+1)).join("");
+    wireCards();
+  } finally { refreshing = false; }
+}
+
+function scoreBlock(g){ return `<div class="scorewrap"><div class="num">${g.voterIds.length}</div><div class="cap">votes</div></div>`; }
+function voteBtn(g){
+  const voted = ME && g.voterIds.includes(ME.id);
+  const dis = ME ? "" : "disabled";
+  const title = !ME ? "Pick your name above to vote" : (voted ? "Click to remove your vote" : "Cast your vote");
+  return `<button class="vote ${voted?"voted":""}" data-id="${g.appid}" ${dis} title="${esc(title)}" `+
+         `aria-label="${voted?"Remove your vote":"Vote"} for ${esc(g.title)}">`+
+         `<span class="v-on">${voted?"Voted ✓":"Vote"}</span><span class="v-off">Remove vote</span></button>`;
+}
+function voterChips(g){
+  if(g.voterIds.length === 0) return `<div class="voters"><span class="chip none">no votes yet</span></div>`;
+  return `<div class="voters">`+ g.voterIds.map(id => {
+    const n = VOTER_MAP[id] || "?";
+    return `<span class="chip"><span class="pip">${esc(initials(n))}</span>${esc(n)}</span>`;
+  }).join("") +`</div>`;
+}
+function addedLine(g){ return `<div class="added">added by ${esc(VOTER_MAP[g.submittedBy] || "someone")}</div>`; }
+function descBlock(g){
+  if(g.desc) return `<div class="desc">${esc(g.desc)}</div>`;
+  if(g.enriched) return "";                       // fetched, but no description available
+  return `<div class="desc"><span class="spin"></span> fetching details…</div>`;
+}
+
+function champCard(g){
+  return `<div class="card champ">`+
+    `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
+    `<div class="crownrow">`+crown()+`Leader</div>`+
+    `<div class="body">`+
+      `<img class="art" src="${headerImg(g.appid)}" alt="${esc(g.title)} cover art" data-appid="${g.appid}" loading="lazy">`+
+      `<div class="meta">`+
+        `<div class="title">${esc(g.title)}</div>`+ descBlock(g)+ voterChips(g)+
+        `<div class="controls" style="margin-top:6px">`+ scoreBlock(g)+ voteBtn(g)+`</div>`+
+        addedLine(g)+
+      `</div>`+
+    `</div></div>`;
+}
+function rowCard(g, rank){
+  return `<div class="card">`+
+    `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
+    `<div class="row2">`+
+      `<div class="rank">#${rank}</div>`+
+      `<img class="thumb" src="${headerImg(g.appid)}" alt="${esc(g.title)} cover art" data-appid="${g.appid}" loading="lazy">`+
+      `<div class="info">`+
+        `<div class="title">${esc(g.title)}</div>`+ descBlock(g)+ voterChips(g)+ addedLine(g)+
+      `</div>`+
+      `<div class="controls">`+ scoreBlock(g)+ voteBtn(g)+`</div>`+
+    `</div></div>`;
+}
+function wireCards(){
+  document.querySelectorAll(".vote[data-id]").forEach(b => b.onclick = () => toggleVote(b.dataset.id));
+  document.querySelectorAll(".kill[data-del]").forEach(b => b.onclick = () => removeGame(b.dataset.del));
+  document.querySelectorAll("img.art[data-appid], img.thumb[data-appid]").forEach(img => {
+    img.onerror = () => {
+      if(!img.dataset.fell){ img.dataset.fell = "1"; img.src = altImg(img.dataset.appid); }
+      else { img.style.background = "linear-gradient(135deg,#1f2c3a,#15202b)"; img.removeAttribute("src"); }
+    };
+  });
+}
+
+/* ---------------- actions ---------------- */
+async function toggleVote(appid){
+  if(!sb) return;
+  if(!ME){ toast("Pick your name above to vote."); return; }
+  const { data: existing } = await sb.from("steamballot_votes")
+    .select("app_id").eq("app_id", appid).eq("voter_id", ME.id).maybeSingle();
+  let err;
+  if(existing){
+    ({ error: err } = await sb.from("steamballot_votes").delete().eq("app_id", appid).eq("voter_id", ME.id));
+  }else{
+    ({ error: err } = await sb.from("steamballot_votes").insert({ app_id: appid, voter_id: ME.id }));
+  }
+  if(err){ console.error(err); toast("Vote didn't save: " + err.message); }
+  await render(true);
+}
+
+async function removeGame(appid){
+  if(!sb) return;
+  const { data: g } = await sb.from("steamballot_games").select("title").eq("app_id", appid).maybeSingle();
+  const name = g ? g.title : "this game";
+  if(!confirm("Remove “" + name + "” from the board for everyone?")) return;
+  const { error } = await sb.from("steamballot_games").delete().eq("app_id", appid);  // votes cascade
+  if(error){ toast("Couldn't remove: " + error.message); return; }
+  await render(true);
+  toast("Removed from the board.");
+}
+
+async function addGame(){
+  if(!sb) return;
+  if(!ME){ toast("Pick your name above first."); return; }
+  const input = document.getElementById("urlInput");
+  const btn = document.getElementById("addBtn");
+  const parsed = parseSteam(input.value);
+  if(!parsed){ toast("That doesn't look like a Steam store link."); input.focus(); return; }
+
+  const { data: ex } = await sb.from("steamballot_games").select("app_id,title").eq("app_id", parsed.appid).maybeSingle();
+  if(ex){ toast("“" + ex.title + "” is already on the board."); input.value = ""; await render(true); return; }
+
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = "Adding…";
+  const fallback = prettySlug(parsed.slug) || ("Steam App " + parsed.appid);
+
+  const { error } = await sb.from("steamballot_games").insert({
+    app_id: parsed.appid, title: fallback, description: "", slug: parsed.slug || "", submitted_by: ME.id
+  });
+  if(error){ toast("Couldn't add: " + error.message); btn.disabled = false; btn.textContent = orig; return; }
+
+  input.value = ""; await render(true);
+  btn.disabled = false; btn.textContent = orig;
+
+  // enrich title + description from Steam in the background
+  const meta = await fetchMeta(parsed.appid, fallback);
+  const patch = meta
+    ? { title: meta.title || fallback, description: meta.description || "", enriched: true }
+    : { enriched: true };                          // stop the spinner even if Steam had nothing
+  await sb.from("steamballot_games").update(patch).eq("app_id", parsed.appid);
+  await render(true);
+}
+
+/* ---------------- helpers ---------------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function initials(name){
+  const p = String(name||"").trim().split(/\s+/);
+  return ((p[0]?.[0]||"") + (p[1]?.[0]||"")).toUpperCase() || (name?.[0]||"?").toUpperCase();
+}
+function crown(){ return `<svg width="15" height="15" viewBox="0 0 24 24" fill="var(--gold)"><path d="M3 7l4 4 5-7 5 7 4-4v11H3z"/></svg>`; }
+let toastT;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3200);
+}
+function banner(msg){ return `<div class="empty"><div class="big">Setup needed</div>${msg}</div>`; }
+
+/* ---------------- boot ---------------- */
+document.getElementById("addBtn").onclick = addGame;
+document.getElementById("urlInput").addEventListener("keydown", e => { if(e.key==="Enter") addGame(); });
+document.getElementById("refreshBtn").onclick = async () => {
+  const s = document.getElementById("syncState"); s.textContent = "Refreshing…";
+  await render(true); s.textContent = "Synced";
+};
+
+(async function init(){
+  if(!CONFIGURED){
+    document.getElementById("ident").innerHTML = `<span class="label">Supabase isn't configured yet.</span>`;
+    document.getElementById("board").innerHTML = banner("Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> near the top of index.html, then redeploy.");
+    return;
+  }
+  if(!window.supabase || !window.supabase.createClient){
+    document.getElementById("board").innerHTML = banner("The Supabase library didn't load — check the script tag or your connection.");
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await renderIdent();
+  await render(true);
+  setInterval(() => render(false), 9000);  // light auto-sync between players
+})();
+</script>
