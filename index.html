@@ -130,6 +130,7 @@
   .row2{display:grid;grid-template-columns:auto 132px 1fr auto;align-items:center;gap:14px;padding:12px 16px}
   .rank{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:18px;color:var(--faint);width:30px;text-align:center}
   .thumb{width:132px;aspect-ratio:460/215;border-radius:8px;object-fit:cover;display:block;background:#0f1922;border:1px solid var(--line-soft)}
+  .art.noart,.thumb.noart{background:linear-gradient(135deg,#1f2c3a,#15202b)}
   .row2 .info{min-width:0}
   .row2 .title{font-weight:600;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .row2 .desc{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
@@ -260,8 +261,19 @@ function parseSteam(raw){
   return null;
 }
 function prettySlug(slug){ return slug ? slug.replace(/[_\-]+/g," ").replace(/\s+/g," ").trim() : ""; }
-function headerImg(appid){ return "https://cdn.cloudflare.steamstatic.com/steam/apps/"+appid+"/header.jpg"; }
-function altImg(appid){ return "https://steamcdn-a.akamaihd.net/steam/apps/"+appid+"/header.jpg"; }
+
+/* Ordered list of image URLs to try for a game. A real Steam URL (from the API,
+   stored in image_url) goes first; the rest are best-guess CDN paths, including
+   the newer store_item_assets path that "Coming Soon" titles use. */
+function imgCandidates(appid, stored){
+  const c = [];
+  if(stored) c.push(stored);
+  c.push("https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/"+appid+"/header.jpg");
+  c.push("https://cdn.cloudflare.steamstatic.com/steam/apps/"+appid+"/header.jpg");
+  c.push("https://steamcdn-a.akamaihd.net/steam/apps/"+appid+"/header.jpg");
+  return c;
+}
+const BLANK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
 /* ---------------- metadata via /api/steam (Steam's own API, server-side) ----------------
    Falls back to the name from the URL if the function isn't deployed or Steam has nothing. */
@@ -270,10 +282,20 @@ async function fetchMeta(appid, fallbackTitle){
     const r = await fetch("/api/steam?appid=" + encodeURIComponent(appid));
     if(!r.ok) throw new Error("status " + r.status);
     const d = await r.json();
-    if(d && d.title) return { title: d.title, description: d.description || "" };
+    if(d && d.title) return { title: d.title, description: d.description || "", image: httpsify(d.image) };
   }catch(e){ console.warn("steam meta fetch failed, using name from link:", e.message); }
   return null;
 }
+/* image-only lookup, used to recover a broken image */
+async function fetchImage(appid){
+  try{
+    const r = await fetch("/api/steam?appid=" + encodeURIComponent(appid));
+    if(!r.ok) return "";
+    const d = await r.json();
+    return d && d.image ? httpsify(d.image) : "";
+  }catch(_){ return ""; }
+}
+function httpsify(u){ return u ? String(u).replace(/^http:\/\//i, "https://") : ""; }
 
 /* ---------------- supabase data ---------------- */
 async function loadVoters(){
@@ -283,7 +305,7 @@ async function loadVoters(){
 }
 async function loadGames(){
   const { data, error } = await sb.from("steamballot_games")
-    .select("app_id,title,description,slug,submitted_by,enriched,created_at");
+    .select("app_id,title,description,slug,image_url,submitted_by,enriched,created_at");
   if(error){ console.error(error); toast("Couldn't load games: " + error.message); return []; }
   return data || [];
 }
@@ -348,6 +370,7 @@ async function render(force){
 
     const list = games.map(g => ({
       appid: g.app_id, title: g.title, desc: g.description, slug: g.slug,
+      image: g.image_url || "",
       submittedBy: g.submitted_by,
       enriched: g.enriched,
       addedAt: g.created_at ? Date.parse(g.created_at) : 0,
@@ -359,7 +382,7 @@ async function render(force){
       String(a.title).localeCompare(String(b.title))
     );
 
-    const sig = JSON.stringify(list.map(g => [g.appid, g.title, g.desc, g.voterIds.slice().sort().join(",")])) + "|" + (ME ? ME.id : "");
+    const sig = JSON.stringify(list.map(g => [g.appid, g.title, g.desc, g.image, g.voterIds.slice().sort().join(",")])) + "|" + (ME ? ME.id : "");
     if(!force && sig === lastSig) return;
     lastSig = sig;
 
@@ -402,7 +425,7 @@ function champCard(g){
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="crownrow">`+crown()+`Leader</div>`+
     `<div class="body">`+
-      `<img class="art" src="${headerImg(g.appid)}" alt="${esc(g.title)} cover art" data-appid="${g.appid}" loading="lazy">`+
+      `<img class="art" alt="${esc(g.title)} cover art" data-appid="${g.appid}" data-img="${esc(g.image)}" loading="lazy">`+
       `<div class="meta">`+
         `<div class="title">${esc(g.title)}</div>`+ descBlock(g)+ voterChips(g)+
         `<div class="controls" style="margin-top:6px">`+ scoreBlock(g)+ voteBtn(g)+`</div>`+
@@ -415,7 +438,7 @@ function rowCard(g, rank){
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="row2">`+
       `<div class="rank">#${rank}</div>`+
-      `<img class="thumb" src="${headerImg(g.appid)}" alt="${esc(g.title)} cover art" data-appid="${g.appid}" loading="lazy">`+
+      `<img class="thumb" alt="${esc(g.title)} cover art" data-appid="${g.appid}" data-img="${esc(g.image)}" loading="lazy">`+
       `<div class="info">`+
         `<div class="title">${esc(g.title)}</div>`+ descBlock(g)+ voterChips(g)+ addedLine(g)+
       `</div>`+
@@ -426,10 +449,25 @@ function wireCards(){
   document.querySelectorAll(".vote[data-id]").forEach(b => b.onclick = () => toggleVote(b.dataset.id));
   document.querySelectorAll(".kill[data-del]").forEach(b => b.onclick = () => removeGame(b.dataset.del));
   document.querySelectorAll("img.art[data-appid], img.thumb[data-appid]").forEach(img => {
-    img.onerror = () => {
-      if(!img.dataset.fell){ img.dataset.fell = "1"; img.src = altImg(img.dataset.appid); }
-      else { img.style.background = "linear-gradient(135deg,#1f2c3a,#15202b)"; img.removeAttribute("src"); }
+    const appid = img.dataset.appid;
+    const cands = imgCandidates(appid, img.dataset.img);
+    let i = 0;
+    img.onerror = async () => {
+      i++;
+      if(i < cands.length){ img.src = cands[i]; return; }     // try next known URL
+      // every guess failed — ask Steam for the real one, just once, and remember it
+      if(!img.dataset.recovered){
+        img.dataset.recovered = "1";
+        const real = await fetchImage(appid);
+        if(real && !cands.includes(real)){
+          if(sb) sb.from("steamballot_games").update({ image_url: real }).eq("app_id", appid);
+          img.src = real;
+          return;
+        }
+      }
+      img.onerror = null; img.classList.add("noart"); img.src = BLANK_IMG;
     };
+    img.src = cands[0];
   });
 }
 
@@ -485,7 +523,7 @@ async function addGame(){
   // enrich title + description from Steam in the background
   const meta = await fetchMeta(parsed.appid, fallback);
   const patch = meta
-    ? { title: meta.title || fallback, description: meta.description || "", enriched: true }
+    ? { title: meta.title || fallback, description: meta.description || "", image_url: meta.image || "", enriched: true }
     : { enriched: true };                          // stop the spinner even if Steam had nothing
   await sb.from("steamballot_games").update(patch).eq("app_id", parsed.appid);
   await render(true);
