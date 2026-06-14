@@ -133,6 +133,8 @@
   .rank{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:18px;color:var(--faint);width:30px;text-align:center}
   .thumb{width:132px;aspect-ratio:460/215;border-radius:8px;object-fit:cover;display:block;background:#0f1922;border:1px solid var(--line-soft)}
   .art.noart,.thumb.noart{background:linear-gradient(135deg,#1f2c3a,#15202b)}
+  .artlink{display:contents}
+  .art,.thumb{cursor:pointer}
   .row2 .info{min-width:0}
   .row2 .title{display:block;font-weight:600;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .row2 .desc{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
@@ -418,6 +420,11 @@ function steamUrl(g){ return "https://store.steampowered.com/app/" + g.appid + (
 function titleLink(g){
   return `<a class="title" href="${esc(steamUrl(g))}" target="_blank" rel="noopener noreferrer" title="Open on Steam">${esc(g.title)}</a>`;
 }
+function gameImg(g, cls){
+  return `<a class="artlink" href="${esc(steamUrl(g))}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(g.title)} on Steam" title="Open ${esc(g.title)} on Steam">`+
+    `<img class="${cls}" alt="${esc(g.title)} cover art" data-appid="${g.appid}" data-img="${esc(g.image)}" loading="lazy">`+
+  `</a>`;
+}
 function descBlock(g){
   if(g.desc) return `<div class="desc">${esc(g.desc)}</div>`;
   if(g.enriched) return "";                       // fetched, but no description available
@@ -429,7 +436,7 @@ function champCard(g){
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="crownrow">`+crown()+`Leader</div>`+
     `<div class="body">`+
-      `<img class="art" alt="${esc(g.title)} cover art" data-appid="${g.appid}" data-img="${esc(g.image)}" loading="lazy">`+
+      gameImg(g, "art")+
       `<div class="meta">`+
         titleLink(g)+ descBlock(g)+ voterChips(g)+
         `<div class="controls" style="margin-top:6px">`+ scoreBlock(g)+ voteBtn(g)+`</div>`+
@@ -442,7 +449,7 @@ function rowCard(g, rank){
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="row2">`+
       `<div class="rank">#${rank}</div>`+
-      `<img class="thumb" alt="${esc(g.title)} cover art" data-appid="${g.appid}" data-img="${esc(g.image)}" loading="lazy">`+
+      gameImg(g, "thumb")+
       `<div class="info">`+
         titleLink(g)+ descBlock(g)+ voterChips(g)+ addedLine(g)+
       `</div>`+
