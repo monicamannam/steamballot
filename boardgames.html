@@ -1,0 +1,740 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Board Ballot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#120c1d; --ink-2:#160f24;
+    --panel:#1b1430; --card:#221836; --card-2:#2a1f43;
+    --line:#392a57; --line-soft:#2d2247;
+    --text:#ece9f6; --muted:#a99cc4; --faint:#7c6e9b;
+    --accent:#a978ff; --accent-deep:#6c3fcf; --accent-ink:#170a2e;
+    --top:#c8a6ff; --top-glow:rgba(169,120,255,.18);
+    --danger:#e8736a;
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:Inter,system-ui,-apple-system,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 520px at 50% -8%, #2a1c44 0%, transparent 60%),
+      linear-gradient(180deg,var(--ink) 0%, var(--ink-2) 100%);
+    background-attachment:fixed;
+    min-height:100vh; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:22px 18px 80px}
+  a{color:var(--accent); text-decoration:none}
+
+  /* ---- top nav: switch between the two boards ---- */
+  .nav{display:inline-flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:20px}
+  .nav a{
+    font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;
+    padding:7px 14px;border-radius:8px;color:var(--muted);
+  }
+  .nav a.on{background:var(--accent);color:var(--accent-ink)}
+  .nav a:not(.on):hover{color:var(--text)}
+
+  .eyebrow{
+    font-family:"Chakra Petch",sans-serif; font-weight:600;
+    letter-spacing:.32em; text-transform:uppercase; font-size:12px;
+    color:var(--accent); display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  h1{
+    font-family:"Chakra Petch",sans-serif; font-weight:700;
+    font-size:clamp(34px,8vw,52px); line-height:.98; letter-spacing:-.01em;
+    margin:.28em 0 .15em;
+  }
+  .tagline{color:var(--muted); font-size:14.5px; max-width:52ch}
+
+  .ident{
+    margin-top:18px; padding:12px 14px; background:var(--panel);
+    border:1px solid var(--line); border-radius:var(--r);
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .ident .label{font-size:13px;color:var(--muted)}
+  .ident code{background:var(--card);padding:2px 6px;border-radius:6px;color:var(--muted);font-size:12px}
+  .who{display:flex;align-items:center;gap:9px}
+  .who .badge{
+    width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+    font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:12px;
+    background:var(--accent);color:var(--accent-ink);
+  }
+  .who .name{font-weight:600;font-size:14.5px}
+  .linkbtn{background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;padding:4px 2px;font-family:inherit}
+  .linkbtn:hover{text-decoration:underline}
+  .pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%}
+  select,input[type=text]{
+    font-family:inherit;font-size:14.5px;color:var(--text);
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;outline:none;
+  }
+  select:focus-visible,input[type=text]:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(169,120,255,.18)}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23a99cc4' viewBox='0 0 16 16'><path d='M4 6l4 4 4-4'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+
+  .btn{
+    font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.02em;
+    font-size:14px;cursor:pointer;border-radius:10px;padding:9px 16px;
+    border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+    transition:filter .15s ease, transform .05s ease;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.5;cursor:default;filter:none}
+
+  .add{
+    margin-top:24px;padding:16px;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--r);
+  }
+  .add .head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .add .head h2{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;margin:0;color:var(--text)}
+  .add .head .refresh{display:flex;align-items:center;gap:8px;color:var(--faint);font-size:12px}
+  .add .row{display:flex;gap:9px}
+  .add input{flex:1;min-width:0}
+  .hint{margin-top:9px;font-size:12px;color:var(--faint)}
+  .hint code{background:var(--card);padding:2px 6px;border-radius:6px;color:var(--muted);font-size:11.5px}
+
+  /* ---- list picker on the add panel ---- */
+  .listpick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .listpick .label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-right:2px}
+  .lp{
+    display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;
+    font-size:13px;color:var(--muted);background:var(--card);
+    border:1px solid var(--line-soft);border-radius:20px;padding:6px 12px;
+    transition:border-color .15s ease,color .15s ease,background .15s ease;
+  }
+  .lp input{appearance:none;width:14px;height:14px;border-radius:5px;border:1.5px solid var(--faint);margin:0;display:grid;place-items:center}
+  .lp input:checked{background:var(--accent);border-color:var(--accent)}
+  .lp input:checked::after{content:"✓";font-size:10px;font-weight:700;color:var(--accent-ink)}
+  .lp:has(input:checked){color:var(--text);border-color:var(--accent);background:rgba(169,120,255,.10)}
+
+  /* ---- list tabs ---- */
+  .tabs{display:flex;gap:6px;margin-top:24px;flex-wrap:wrap}
+  .tab{
+    font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.03em;font-size:13.5px;
+    cursor:pointer;border-radius:10px;padding:9px 14px;
+    border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    display:inline-flex;align-items:center;gap:8px;
+    transition:color .15s ease,border-color .15s ease,background .15s ease;
+  }
+  .tab .ct{font-size:11px;background:var(--card-2);color:var(--faint);border-radius:20px;padding:1px 7px;min-width:20px;text-align:center}
+  .tab:hover{color:var(--text)}
+  .tab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .tab.on .ct{background:rgba(23,10,46,.18);color:var(--accent-ink)}
+
+  .board{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+
+  .empty{
+    text-align:center;padding:44px 20px;border:1px dashed var(--line);
+    border-radius:var(--r);color:var(--muted);
+  }
+  .empty .big{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:18px;color:var(--text);margin-bottom:6px}
+  .empty code{background:var(--card);padding:2px 6px;border-radius:6px;color:var(--accent);font-size:12.5px}
+
+  .card{
+    background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r);
+    position:relative;overflow:hidden;animation:rise .3s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .card.top{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent), 0 18px 50px -26px var(--top-glow);
+    background:linear-gradient(180deg,#2a1f4380 0%, var(--card) 60%);
+  }
+
+  .row2{display:grid;grid-template-columns:auto auto 120px 1fr auto;align-items:center;gap:14px;padding:12px 16px}
+
+  /* drag handle + rank */
+  .rerank{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .grip{
+    cursor:grab;color:var(--faint);display:grid;place-items:center;padding:2px;
+    touch-action:none;transition:color .12s ease;border-radius:6px;
+  }
+  .grip:hover{color:var(--accent)}
+  .grip:active{cursor:grabbing}
+  .card:hover .grip{color:var(--muted)}
+  .rank{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:16px;color:var(--faint);min-width:26px;text-align:center}
+  .card.top .rank{color:var(--top)}
+
+  /* SortableJS drag states */
+  .sortable-ghost{opacity:.35}
+  .sortable-ghost .row2{outline:1px dashed var(--accent);outline-offset:-1px;border-radius:var(--r)}
+  .sortable-chosen{cursor:grabbing}
+  .sortable-drag{box-shadow:0 20px 50px -16px #000}
+
+  .thumb{width:120px;aspect-ratio:1/1;border-radius:8px;object-fit:cover;display:block;background:#15101f;border:1px solid var(--line-soft)}
+  .thumb.noart{background:linear-gradient(135deg,#241a3b,#191124)}
+
+  .info{min-width:0}
+  .info .title{font-weight:600;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .info .meta{color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.4}
+  .info .meta b{color:var(--text);font-weight:600}
+  .recs{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+  .recs .rlabel{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-right:2px}
+  .pchip{font-size:11px;color:var(--muted);background:var(--card-2);border:1px solid var(--line-soft);border-radius:20px;padding:2px 9px}
+  .pchip.best{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:600}
+  .added{font-size:11px;color:var(--faint);margin-top:8px}
+
+  /* ratings */
+  .rate{display:flex;align-items:center;gap:14px}
+  .scorewrap{text-align:center;min-width:48px}
+  .scorewrap .num{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:28px;line-height:1;color:var(--accent)}
+  .scorewrap .num.none{color:var(--faint)}
+  .scorewrap .cap{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:3px}
+  .yours{display:flex;flex-direction:column;gap:4px}
+  .yours label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .yours select{padding:7px 9px;padding-right:26px;font-size:13.5px}
+
+  .kill{
+    position:absolute;top:9px;right:10px;width:24px;height:24px;border-radius:7px;
+    border:1px solid transparent;background:transparent;color:var(--faint);
+    cursor:pointer;font-size:15px;line-height:1;display:grid;place-items:center;z-index:2;
+  }
+  .kill:hover{color:var(--danger);background:rgba(232,115,106,.12)}
+
+  #toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);
+    background:var(--card-2);border:1px solid var(--line);color:var(--text);
+    padding:11px 18px;border-radius:12px;font-size:13.5px;box-shadow:0 14px 40px -16px #000;
+    opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;max-width:90vw;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media (max-width:600px){
+    .row2{
+      grid-template-columns:auto 96px 1fr;
+      grid-template-areas:"rerank thumb info" "rate rate rate";
+      row-gap:12px;
+    }
+    .rerank{grid-area:rerank;flex-direction:row;gap:6px}
+    .rerank .rank{order:-1}
+    .thumb{grid-area:thumb;width:96px}
+    .info{grid-area:info}
+    .rate{grid-area:rate;justify-content:space-between;border-top:1px solid var(--line-soft);padding-top:11px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+
+<div class="wrap">
+  <nav class="nav">
+    <a href="index.html">Steam</a>
+    <a href="boardgames.html" class="on">Board games</a>
+  </nav>
+
+  <div class="eyebrow"><span class="dot"></span><span>Board game night · BGG</span></div>
+  <h1>The Board Ballot</h1>
+  <p class="tagline">Paste a BoardGameGeek link to add a game. Rank each list by hand, and everyone rates 1–10. Four lists, one shared library.</p>
+
+  <div class="ident" id="ident"></div>
+
+  <div class="add">
+    <div class="head">
+      <h2>Add a game</h2>
+      <div class="refresh"><span id="syncState">Synced</span> <button class="linkbtn" id="refreshBtn" title="Refresh from everyone">Refresh</button></div>
+    </div>
+    <div class="row">
+      <input type="text" id="urlInput" placeholder="https://boardgamegeek.com/boardgame/…" autocomplete="off" spellcheck="false">
+      <button class="btn" id="addBtn">Add game</button>
+    </div>
+    <div class="listpick">
+      <span class="label">Add to</span>
+      <label class="lp"><input type="checkbox" class="lpbox" value="2p" checked> 2 players</label>
+      <label class="lp"><input type="checkbox" class="lpbox" value="3p"> 3 players</label>
+      <label class="lp"><input type="checkbox" class="lpbox" value="4p"> 4 players</label>
+      <label class="lp"><input type="checkbox" class="lpbox" value="played"> Played</label>
+    </div>
+    <div class="hint">Example: <code>https://boardgamegeek.com/boardgame/13/catan</code></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="board" id="board"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Supabase client (browser build) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- SortableJS: drag-to-reorder (mouse + touch) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<script>
+/* ============ CONFIG — same Supabase project as the Steam board ============ */
+const SUPABASE_URL      = 'https://axjdyxxwjqkzjptykjrk.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_bxbvx2jVlmlqx_UgjGBqnA_CicT3EFM'
+/* ========================================================================== */
+
+const CONFIGURED = !/YOUR-PROJECT|YOUR-ANON/.test(SUPABASE_URL + SUPABASE_ANON_KEY);
+let sb = null;
+
+/* identity is shared with the Steam page — same key, same voters table,
+   so whoever you picked there is already picked here (and vice-versa). */
+const SAVED_KEY = "ballot_voter_id";
+const local = {
+  get(k){ try{ return localStorage.getItem(k); }catch(_){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(_){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(_){} }
+};
+
+let ME = null;          // {id, name}
+let VOTERS = [];        // [{id, name}]
+let VOTER_MAP = {};     // id -> name
+
+const LISTS = [
+  { key:"2p",     label:"2 players" },
+  { key:"3p",     label:"3 players" },
+  { key:"4p",     label:"4 players" },
+  { key:"played", label:"Played" },
+];
+let LIST = "2p";        // active tab
+
+/* in-memory snapshot of the latest load */
+let GAMES = {};         // game_id -> row
+let ENTRIES = { "2p":[], "3p":[], "4p":[], "played":[] };  // ordered [{game_id,position}]
+let RATINGS = {};       // game_id -> { voter_id: rating }
+
+/* ---------------- bgg url parsing ---------------- */
+function parseBgg(raw){
+  const url = (raw||"").trim();
+  let m = url.match(/boardgamegeek\.com\/boardgame(?:expansion|accessory)?\/(\d+)/i);
+  if(m) return m[1];
+  m = url.match(/[?&]id=(\d+)/);          // …/xmlapi2/thing?id=13
+  if(m) return m[1];
+  m = url.match(/^(\d{1,9})$/);           // bare id pasted in
+  if(m) return m[1];
+  return null;
+}
+const BLANK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+const SIX_MONTHS = 1000*60*60*24*182;
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+/* ---------------- bgg fetch via /api/bgg (server-side) ---------------- */
+async function fetchBgg(id, tries=4){
+  for(let i=0;i<tries;i++){
+    try{
+      const r = await fetch("/api/bgg?id=" + encodeURIComponent(id));
+      if(r.status === 202){ await sleep(1500); continue; }  // BGG still building it
+      if(!r.ok) return null;
+      const d = await r.json();
+      return d && d.name ? d : null;
+    }catch(e){ console.warn("bgg fetch failed:", e.message); return null; }
+  }
+  return null;
+}
+/* map a fresh BGG payload onto a steamballot_boardgames row */
+function mapBgg(id, d, submittedBy){
+  return {
+    game_id: id,
+    name: d.name || "",
+    image_url: d.image || "",
+    year_published: d.year_published ?? null,
+    rating: d.rating ?? null,
+    weight: d.weight ?? null,
+    min_players: d.min_players ?? null,
+    max_players: d.max_players ?? null,
+    min_playtime: d.min_playtime ?? null,
+    max_playtime: d.max_playtime ?? null,
+    recommended_players: JSON.stringify(d.recommended_players || []),
+    best_players: d.best_players || "",
+    submitted_by: submittedBy || null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+/* ---------------- supabase data ---------------- */
+async function loadVoters(){
+  const { data, error } = await sb.from("steamballot_voters").select("id,name").order("name");
+  if(error){ console.error(error); toast("Couldn't load players: " + error.message); return []; }
+  return data || [];
+}
+async function loadGames(){
+  const { data, error } = await sb.from("steamballot_boardgames").select("*");
+  if(error){ console.error(error); toast("Couldn't load games: " + error.message); return []; }
+  return data || [];
+}
+async function loadEntries(){
+  const { data, error } = await sb.from("steamballot_boardgame_lists").select("game_id,list_key,position");
+  if(error){ console.error(error); return []; }
+  return data || [];
+}
+async function loadRatings(){
+  const { data, error } = await sb.from("steamballot_boardgame_ratings").select("game_id,voter_id,rating");
+  if(error){ console.error(error); return []; }
+  return data || [];
+}
+
+/* ---------------- identity (shared with Steam page) ---------------- */
+async function renderIdent(){
+  const el = document.getElementById("ident");
+  VOTERS = await loadVoters();
+  VOTER_MAP = Object.fromEntries(VOTERS.map(v => [v.id, v.name]));
+  const savedId = local.get(SAVED_KEY);
+  ME = VOTERS.find(v => v.id === savedId) || null;
+
+  if(VOTERS.length === 0){
+    el.innerHTML = `<span class="label">No players yet — add rows to the <code>steamballot_voters</code> table in Supabase, then hit Refresh.</span>`;
+    return;
+  }
+  if(ME){
+    el.innerHTML = whoMarkup(ME) + `<button class="linkbtn" id="changeMe" style="margin-left:auto">Not you?</button>`;
+    document.getElementById("changeMe").onclick = () => { local.del(SAVED_KEY); ME = null; renderPicker(); };
+  }else{
+    renderPicker();
+  }
+}
+function whoMarkup(me){
+  return `<span class="who"><span class="badge">${esc(initials(me.name))}</span>`+
+         `<span><span class="label">You're rating as</span><br><span class="name">${esc(me.name)}</span></span></span>`;
+}
+function renderPicker(){
+  const el = document.getElementById("ident");
+  const opts = VOTERS.map(v => `<option value="${esc(v.id)}">${esc(v.name)}</option>`).join("");
+  el.innerHTML =
+    `<div class="pick"><span class="label">Who are you?</span>`+
+    `<select id="voterSel"><option value="">— pick your name —</option>${opts}</select>`+
+    `<button class="btn" id="saveMe">Start</button></div>`;
+  document.getElementById("saveMe").onclick = async () => {
+    const sel = document.getElementById("voterSel");
+    if(!sel.value){ toast("Pick your name first."); return; }
+    local.set(SAVED_KEY, sel.value);
+    ME = VOTERS.find(v => v.id === sel.value);
+    await renderIdent();
+    await render(true);
+    toast("You're in, " + (ME ? ME.name : "") + ".");
+  };
+}
+
+/* ---------------- render ---------------- */
+let lastSig = "";
+let refreshing = false;
+let staleChecked = false;
+let dragging = false;
+let sortable = null;
+
+async function render(force){
+  if(!sb || refreshing || dragging) return;
+  refreshing = true;
+  try{
+    const [games, entries, ratings] = await Promise.all([loadGames(), loadEntries(), loadRatings()]);
+    GAMES = Object.fromEntries(games.map(g => [g.game_id, g]));
+    RATINGS = {};
+    for(const r of ratings){ (RATINGS[r.game_id] = RATINGS[r.game_id] || {})[r.voter_id] = r.rating; }
+    ENTRIES = { "2p":[], "3p":[], "4p":[], "played":[] };
+    for(const e of entries){ if(ENTRIES[e.list_key]) ENTRIES[e.list_key].push({ game_id:e.game_id, position:e.position }); }
+    for(const k in ENTRIES){
+      ENTRIES[k].sort((a,b) => a.position - b.position ||
+        String(nameOf(a.game_id)).localeCompare(String(nameOf(b.game_id))));
+    }
+
+    renderTabs();
+
+    const active = ENTRIES[LIST] || [];
+    const sig = LIST + "|" + (ME ? ME.id : "") + "|" + JSON.stringify(active.map(e => {
+      const g = GAMES[e.game_id] || {};
+      return [e.game_id, g.name, g.image_url, g.updated_at, RATINGS[e.game_id] || {}];
+    }));
+    if(!force && sig === lastSig){ return; }
+    lastSig = sig;
+
+    renderBoard();
+  } finally {
+    refreshing = false;
+    if(!staleChecked){ staleChecked = true; maybeRefreshStale(Object.values(GAMES)); }
+  }
+}
+
+function renderTabs(){
+  document.getElementById("tabs").innerHTML = LISTS.map(l => {
+    const n = (ENTRIES[l.key] || []).length;
+    return `<button class="tab ${l.key===LIST?"on":""}" data-list="${l.key}">`+
+           `${esc(l.label)} <span class="ct">${n}</span></button>`;
+  }).join("");
+  document.querySelectorAll(".tab[data-list]").forEach(b => b.onclick = () => {
+    LIST = b.dataset.list; lastSig = ""; render(true);
+  });
+}
+
+function renderBoard(){
+  const board = document.getElementById("board");
+  const list = ENTRIES[LIST] || [];
+  if(list.length === 0){
+    if(sortable){ sortable.destroy(); sortable = null; }
+    board.innerHTML = `<div class="empty"><div class="big">Nothing in this list yet</div>`+
+      `Paste a BoardGameGeek link above and tick <code>${esc(labelOf(LIST))}</code> to add the first one.</div>`;
+    return;
+  }
+  board.innerHTML = list.map((e, i) => card(GAMES[e.game_id], i+1, i===list.length-1)).join("");
+  wireCards();
+}
+
+function card(g, rank, last){
+  if(!g) return "";
+  const gid = g.game_id;
+  const avg = avgRating(gid);
+  const mine = myRating(gid);
+  const top = rank === 1;
+  const fetching = !g.name; // shouldn't happen, but keep a spinner just in case
+  return `<div class="card ${top?"top":""}" data-gid="${esc(gid)}">`+
+    `<button class="kill" data-del="${esc(gid)}" title="Remove from this list" aria-label="Remove ${esc(g.name)}">×</button>`+
+    `<div class="row2">`+
+      `<div class="rerank">`+
+        `<span class="grip" title="Drag to reorder" aria-label="Drag to reorder">`+gripIcon()+`</span>`+
+        `<div class="rank">#${rank}</div>`+
+      `</div>`+
+      `<img class="thumb" alt="${esc(g.name)} box art" data-img="${esc(g.image_url||"")}" loading="lazy">`+
+      `<div class="info">`+
+        `<div class="title">${esc(g.name || ("BGG #" + gid))}</div>`+
+        (fetching ? `<div class="meta"><span class="spin"></span> fetching details…</div>` : `<div class="meta">${metaLine(g)}</div>`)+
+        recLine(g)+
+        addedLine(g)+
+      `</div>`+
+      `<div class="rate">`+
+        `<div class="scorewrap"><div class="num ${avg==null?"none":""}">${avg==null?"–":avg}</div><div class="cap">our rating</div></div>`+
+        `<div class="yours"><label>Your rating</label>`+
+          `<select class="rsel" data-id="${esc(gid)}">`+
+            `<option value="">—</option>`+
+            [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${String(mine)===String(n)?"selected":""}>${n}</option>`).join("")+
+          `</select>`+
+        `</div>`+
+      `</div>`+
+    `</div></div>`;
+}
+
+function metaLine(g){
+  const bits = [];
+  if(g.year_published) bits.push(esc(String(g.year_published)));
+  const p = fmtPlayers(g); if(p) bits.push(p);
+  const t = fmtTime(g);    if(t) bits.push(t);
+  if(g.rating != null)  bits.push(`BGG <b>${esc(String(g.rating))}</b>`);
+  if(g.weight != null)  bits.push(`Weight <b>${esc(String(g.weight))}</b>`);
+  return bits.join(" &middot; ");
+}
+function recLine(g){
+  let rec = []; try{ rec = JSON.parse(g.recommended_players || "[]"); }catch(_){ rec = []; }
+  const best = g.best_players || "";
+  if(!rec.length && !best) return "";
+  // make sure the headline "best" count shows even if the poll didn't net-recommend it
+  const counts = rec.slice();
+  if(best && !counts.includes(best)) counts.unshift(best);
+  const chips = counts.map(c => `<span class="pchip ${c===best?"best":""}">${esc(c)}</span>`).join(" ");
+  return `<div class="recs"><span class="rlabel">Plays best at</span>${chips}</div>`;
+}
+function addedLine(g){
+  const who = VOTER_MAP[g.submitted_by];
+  return who ? `<div class="added">added by ${esc(who)}</div>` : "";
+}
+function fmtPlayers(g){
+  const a = g.min_players, b = g.max_players;
+  if(a && b) return a===b ? `${a} players` : `${a}–${b} players`;
+  if(a) return `${a}+ players`;
+  if(b) return `up to ${b} players`;
+  return "";
+}
+function fmtTime(g){
+  const a = g.min_playtime, b = g.max_playtime;
+  if(a && b) return a===b ? `${a} min` : `${a}–${b} min`;
+  if(b) return `${b} min`;
+  if(a) return `${a} min`;
+  return "";
+}
+
+function avgRating(gid){
+  const r = RATINGS[gid]; if(!r) return null;
+  const vals = Object.values(r); if(!vals.length) return null;
+  return Math.round((vals.reduce((a,b)=>a+b,0) / vals.length) * 10) / 10;
+}
+function myRating(gid){ return (ME && RATINGS[gid]) ? (RATINGS[gid][ME.id] || "") : ""; }
+function nameOf(gid){ return (GAMES[gid] && GAMES[gid].name) || ""; }
+function labelOf(key){ const l = LISTS.find(x=>x.key===key); return l ? l.label : key; }
+function gripIcon(){
+  return `<svg width="12" height="20" viewBox="0 0 12 20" fill="currentColor" aria-hidden="true">`+
+    `<circle cx="3" cy="4" r="1.5"/><circle cx="9" cy="4" r="1.5"/>`+
+    `<circle cx="3" cy="10" r="1.5"/><circle cx="9" cy="10" r="1.5"/>`+
+    `<circle cx="3" cy="16" r="1.5"/><circle cx="9" cy="16" r="1.5"/></svg>`;
+}
+
+function wireCards(){
+  document.querySelectorAll(".kill[data-del]").forEach(b => b.onclick = () => removeFromList(b.dataset.del));
+  document.querySelectorAll(".rsel[data-id]").forEach(s => s.onchange = () => setRating(s.dataset.id, s.value));
+  document.querySelectorAll("img.thumb[data-img]").forEach(img => {
+    const url = img.dataset.img;
+    if(!url){ img.classList.add("noart"); img.src = BLANK_IMG; return; }
+    img.onerror = () => { img.onerror = null; img.classList.add("noart"); img.src = BLANK_IMG; };
+    img.src = url;
+  });
+  initSortable();
+}
+
+/* drag-to-reorder, mouse + touch, via SortableJS (loaded from CDN) */
+function initSortable(){
+  const board = document.getElementById("board");
+  if(sortable){ sortable.destroy(); sortable = null; }
+  if(!window.Sortable || !board.querySelector(".card")) return;
+  sortable = window.Sortable.create(board, {
+    handle: ".grip",
+    draggable: ".card",
+    animation: 150,
+    onStart(){ dragging = true; },
+    onEnd(){ dragging = false; persistOrder(); },
+  });
+}
+
+/* on drop, renumber the active list top-to-bottom in a single write */
+async function persistOrder(){
+  if(!sb) return;
+  const ids = [...document.querySelectorAll("#board .card[data-gid]")].map(c => c.dataset.gid);
+  if(!ids.length) return;
+  const rows = ids.map((gid, i) => ({ game_id: gid, list_key: LIST, position: i }));
+  const { error } = await sb.from("steamballot_boardgame_lists")
+    .upsert(rows, { onConflict:"game_id,list_key" });
+  if(error){ toast("Couldn't save the new order: " + error.message); }
+  lastSig = ""; await render(true);
+}
+
+async function setRating(gid, val){
+  if(!sb) return;
+  if(!ME){ toast("Pick your name above to rate."); lastSig=""; await render(true); return; }
+  let err;
+  if(!val){
+    ({ error: err } = await sb.from("steamballot_boardgame_ratings").delete().eq("game_id", gid).eq("voter_id", ME.id));
+  }else{
+    ({ error: err } = await sb.from("steamballot_boardgame_ratings")
+      .upsert({ game_id:gid, voter_id:ME.id, rating:parseInt(val,10) }, { onConflict:"game_id,voter_id" }));
+  }
+  if(err){ toast("Rating didn't save: " + err.message); }
+  lastSig = ""; await render(true);
+}
+
+async function removeFromList(gid){
+  if(!sb) return;
+  const g = GAMES[gid]; const name = g ? g.name : "this game";
+  if(!confirm("Remove “" + name + "” from the " + labelOf(LIST) + " list?")) return;
+  const { error } = await sb.from("steamballot_boardgame_lists").delete().eq("game_id", gid).eq("list_key", LIST);
+  if(error){ toast("Couldn't remove: " + error.message); return; }
+  // if the game is now in no list at all, drop it from the library too (ratings cascade)
+  const { count } = await sb.from("steamballot_boardgame_lists").select("game_id", { count:"exact", head:true }).eq("game_id", gid);
+  if(!count){ await sb.from("steamballot_boardgames").delete().eq("game_id", gid); }
+  lastSig = ""; await render(true);
+  toast("Removed from " + labelOf(LIST) + ".");
+}
+
+async function nextPos(listKey){
+  const { data } = await sb.from("steamballot_boardgame_lists")
+    .select("position").eq("list_key", listKey).order("position", { ascending:false }).limit(1);
+  return (data && data.length) ? (data[0].position + 1) : 0;
+}
+function selectedLists(){
+  return Array.from(document.querySelectorAll(".lpbox:checked")).map(b => b.value);
+}
+
+async function addGame(){
+  if(!sb) return;
+  if(!ME){ toast("Pick your name above first."); return; }
+  const input = document.getElementById("urlInput");
+  const btn = document.getElementById("addBtn");
+  const id = parseBgg(input.value);
+  if(!id){ toast("That doesn't look like a BoardGameGeek link."); input.focus(); return; }
+  const lists = selectedLists();
+  if(lists.length === 0){ toast("Tick at least one list for this game."); return; }
+
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = "Adding…";
+  try{
+    // already in our library? then we're just adding it to more lists
+    let { data: ex } = await sb.from("steamballot_boardgames").select("game_id,name").eq("game_id", id).maybeSingle();
+    if(!ex){
+      const d = await fetchBgg(id);
+      if(!d){ toast("Couldn't fetch that game from BGG — check the link and try again."); return; }
+      const { error } = await sb.from("steamballot_boardgames").insert(mapBgg(id, d, ME.id));
+      if(error){ toast("Couldn't add: " + error.message); return; }
+      ex = { game_id:id, name:d.name };
+    }
+    // append to the bottom of each chosen list (skips lists it's already in)
+    for(const lk of lists){
+      const pos = await nextPos(lk);
+      await sb.from("steamballot_boardgame_lists").upsert(
+        { game_id:id, list_key:lk, position:pos },
+        { onConflict:"game_id,list_key", ignoreDuplicates:true }
+      );
+    }
+    input.value = "";
+    LIST = lists[0]; lastSig = "";       // jump to a list it landed in
+    await render(true);
+    toast("“" + ex.name + "” added.");
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+/* ---------------- staleness refresh (the 6-month re-check) ----------------
+   Runs once per page load, in the background, after the first paint. Any game
+   whose cached data is older than ~6 months gets re-pulled from BGG and
+   updated in place. Capped + spaced out so we stay polite to BGG. */
+async function maybeRefreshStale(games){
+  const now = Date.now();
+  const stale = games.filter(g => {
+    const t = g.updated_at ? Date.parse(g.updated_at) : 0;
+    return !t || (now - t) > SIX_MONTHS;
+  }).slice(0, 10);
+  if(!stale.length) return;
+
+  let changed = false;
+  for(const g of stale){
+    const d = await fetchBgg(g.game_id);
+    if(d){
+      const patch = mapBgg(g.game_id, d, g.submitted_by); // refresh fields + updated_at
+      delete patch.game_id;
+      await sb.from("steamballot_boardgames").update(patch).eq("game_id", g.game_id);
+      changed = true;
+    }
+    await sleep(800); // gentle throttle
+  }
+  if(changed){ lastSig = ""; await render(true); }
+}
+
+/* ---------------- helpers ---------------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function initials(name){
+  const p = String(name||"").trim().split(/\s+/);
+  return ((p[0]?.[0]||"") + (p[1]?.[0]||"")).toUpperCase() || (name?.[0]||"?").toUpperCase();
+}
+let toastT;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3200);
+}
+function banner(msg){ return `<div class="empty"><div class="big">Setup needed</div>${msg}</div>`; }
+
+/* ---------------- boot ---------------- */
+document.getElementById("addBtn").onclick = addGame;
+document.getElementById("urlInput").addEventListener("keydown", e => { if(e.key==="Enter") addGame(); });
+document.getElementById("refreshBtn").onclick = async () => {
+  const s = document.getElementById("syncState"); s.textContent = "Refreshing…";
+  lastSig = ""; await render(true); s.textContent = "Synced";
+};
+
+(async function init(){
+  if(!CONFIGURED){
+    document.getElementById("ident").innerHTML = `<span class="label">Supabase isn't configured yet.</span>`;
+    document.getElementById("board").innerHTML = banner("Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> near the top of boardgames.html, then redeploy.");
+    return;
+  }
+  if(!window.supabase || !window.supabase.createClient){
+    document.getElementById("board").innerHTML = banner("The Supabase library didn't load — check the script tag or your connection.");
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  await renderIdent();
+  await render(true);
+  setInterval(() => render(false), 9000);  // light auto-sync between players
+})();
+</script>
