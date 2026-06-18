@@ -14,6 +14,7 @@
     --accent:#a978ff; --accent-deep:#6c3fcf; --accent-ink:#170a2e;
     --top:#c8a6ff; --top-glow:rgba(169,120,255,.18);
     --danger:#e8736a;
+    --sweet:#3fe89a; --sweet-rgb:63,232,154; --sweet-ink:#06281a;
     --r:14px;
   }
   *{box-sizing:border-box}
@@ -175,7 +176,8 @@
   .thumb-link:hover{opacity:.88}
 
   .info{min-width:0}
-  a.title{display:inline-block;max-width:100%;font-weight:600;font-size:17px;line-height:1.2;color:var(--text);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+  .titlerow{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap;row-gap:6px}
+  a.title{min-width:0;flex:0 1 auto;font-weight:600;font-size:17px;line-height:1.2;color:var(--text);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   a.title:hover{color:var(--accent)}
 
   /* metadata as stat tiles — spreads across the full info width */
@@ -227,6 +229,44 @@
   }
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+  /* modal */
+  .modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(8,5,16,.62);backdrop-filter:blur(2px)}
+  .modal.show{display:flex;animation:fade .15s ease both}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:380px;width:100%;box-shadow:0 30px 70px -20px #000}
+  .modal-msg{font-size:16px;line-height:1.5;color:var(--text);margin-bottom:16px}
+  .modal-msg b{font-weight:700}
+  .modal-sub{font-size:13.5px;color:var(--muted)}
+  .modal-btns{display:flex;flex-direction:column;gap:8px}
+  .modal-btns button{font-family:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:11px 14px;cursor:pointer;border:1px solid var(--line);background:var(--card-2);color:var(--text)}
+  .modal-btns button:hover{border-color:var(--accent)}
+  .modal-btns button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .modal-btns button.primary:hover{filter:brightness(1.08)}
+  .modal-btns button.danger{color:var(--danger);background:rgba(232,115,106,.10);border-color:transparent}
+  .modal-btns button.danger:hover{background:rgba(232,115,106,.18);border-color:var(--danger)}
+  .modal-btns button.ghost{background:transparent;color:var(--muted);border-color:transparent}
+  .modal-btns button.ghost:hover{color:var(--text);border-color:transparent}
+
+  /* sweet-spot / recommended highlight */
+  .sweet-badge{
+    display:inline-flex;align-items:center;gap:5px;flex:none;
+    font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;
+    color:var(--sweet-ink);background:var(--sweet);border-radius:20px;padding:3px 11px;
+    animation:sweetpulse 2.2s ease-in-out infinite;
+  }
+  .sweet-badge .st{display:inline-block;animation:twinkle 2.2s ease-in-out infinite}
+  .rec-badge{
+    display:inline-flex;align-items:center;flex:none;font-size:11px;font-weight:600;
+    color:var(--sweet);background:rgba(var(--sweet-rgb),.12);
+    border:1px solid var(--sweet);border-radius:20px;padding:2px 10px;
+  }
+  .card.sweet::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sweet);border-radius:var(--r) 0 0 var(--r);z-index:1}
+  @keyframes sweetpulse{
+    0%,100%{box-shadow:0 0 8px 0 rgba(var(--sweet-rgb),.30)}
+    50%{box-shadow:0 0 0 3px rgba(var(--sweet-rgb),.16), 0 0 18px 2px rgba(var(--sweet-rgb),.55)}
+  }
+  @keyframes twinkle{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.28);opacity:.82}}
+
   .spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px}
   @keyframes sp{to{transform:rotate(360deg)}}
 
@@ -274,7 +314,7 @@
       <label class="lp"><input type="checkbox" class="lpbox" value="4p"> 4 players</label>
       <label class="lp"><input type="checkbox" class="lpbox" value="played"> Played</label>
     </div>
-    <div class="hint">Example: <code>https://boardgamegeek.com/boardgame/175914/food-chain-magnate</code></div>
+    <div class="hint">Example: <code>https://boardgamegeek.com/boardgame/13/catan</code></div>
   </div>
 
   <div class="tabs" id="tabs"></div>
@@ -288,6 +328,12 @@
 </div>
 
 <div id="toast"></div>
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-msg" id="modalMsg"></div>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
 
 <!-- Supabase client (browser build) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -519,7 +565,23 @@ function card(g, rank, last){
   const top = rank === 1;
   const url = bggUrl(gid);
   const fetching = !g.name;
-  return `<div class="card ${top?"top":""}" data-gid="${esc(gid)}">`+
+
+  // does THIS list match the game's best / recommended player count?
+  const listCount = LIST.replace("p", "");          // '3p' -> '3'; 'played' -> 'played'
+  let recArr = []; try{ recArr = JSON.parse(g.recommended_players || "[]").map(String); }catch(_){}
+  const isBest = !!g.best_players && String(g.best_players) === listCount;
+  const isRec  = !isBest && recArr.includes(listCount);
+  const badge = isBest
+    ? `<span class="sweet-badge" title="BGG says this plays best at ${esc(listCount)} players"><span class="st">★</span> Sweet spot</span>`
+    : (isRec
+        ? `<span class="rec-badge" title="BGG recommends this at ${esc(listCount)} players">Recommended here</span>`
+        : "");
+
+  const cls = ["card"];
+  if(top) cls.push("top");
+  if(isBest) cls.push("sweet");
+
+  return `<div class="${cls.join(" ")}" data-gid="${esc(gid)}">`+
     `<button class="kill" data-del="${esc(gid)}" title="Remove from this list" aria-label="Remove ${esc(g.name)}">×</button>`+
     `<div class="row2">`+
       `<div class="rerank">`+
@@ -529,7 +591,10 @@ function card(g, rank, last){
       `<a class="thumb-link" href="${url}" target="_blank" rel="noopener noreferrer" title="View on BoardGameGeek">`+
         `<img class="thumb" alt="${esc(g.name)} box art" data-img="${esc(g.image_url||"")}" loading="lazy"></a>`+
       `<div class="info">`+
-        `<a class="title" href="${url}" target="_blank" rel="noopener noreferrer">${esc(g.name || ("BGG #" + gid))}</a>`+
+        `<div class="titlerow">`+
+          `<a class="title" href="${url}" target="_blank" rel="noopener noreferrer">${esc(g.name || ("BGG #" + gid))}</a>`+
+          badge+
+        `</div>`+
         (fetching
           ? `<div class="stats"><span class="stat"><span class="sv"><span class="spin"></span></span><span class="sl">fetching…</span></span></div>`
           : statsBlock(g))+
@@ -683,14 +748,56 @@ async function setRating(gid, val){
 async function removeFromList(gid){
   if(!sb) return;
   const g = GAMES[gid]; const name = g ? g.name : "this game";
-  if(!confirm("Remove “" + name + "” from the " + labelOf(LIST) + " list?")) return;
-  const { error } = await sb.from("steamballot_boardgame_lists").delete().eq("game_id", gid).eq("list_key", LIST);
-  if(error){ toast("Couldn't remove: " + error.message); return; }
-  // if the game is now in no list at all, drop it from the library too (ratings cascade)
-  const { count } = await sb.from("steamballot_boardgame_lists").select("game_id", { count:"exact", head:true }).eq("game_id", gid);
-  if(!count){ await sb.from("steamballot_boardgames").delete().eq("game_id", gid); }
+
+  // On the Played list, the × is a simple remove. On a player list, offer
+  // "move to Played" vs "delete".
+  if(LIST === "played"){
+    const ok = await askChoice(`Remove <b>${esc(name)}</b> from the Played list?`, [
+      { label:"Remove", value:"remove", kind:"danger" },
+      { label:"Cancel", value:null, kind:"ghost" },
+    ]);
+    if(ok !== "remove") return;
+    await dropFromList(gid, "played");
+    lastSig = ""; await render(true);
+    toast("Removed from Played.");
+    return;
+  }
+
+  const choice = await askChoice(
+    `<b>${esc(name)}</b><br><span class="modal-sub">It's in your ${esc(labelOf(LIST))} list. Move it to Played, or delete it?</span>`,
+    [
+      { label:"Move to Played", value:"played", kind:"primary" },
+      { label:"Delete", value:"delete", kind:"danger" },
+      { label:"Cancel", value:null, kind:"ghost" },
+    ]
+  );
+  if(!choice) return;
+
+  if(choice === "played"){
+    // add to Played (bottom) if not already there, then leave the current list
+    const pos = await nextPos("played");
+    await sb.from("steamballot_boardgame_lists").upsert(
+      { game_id:gid, list_key:"played", position:pos },
+      { onConflict:"game_id,list_key", ignoreDuplicates:true }
+    );
+    await sb.from("steamballot_boardgame_lists").delete().eq("game_id", gid).eq("list_key", LIST);
+    lastSig = ""; await render(true);
+    toast(`Moved “${name}” to Played.`);
+    return;
+  }
+
+  // delete: remove from this list; if it's now on no list, drop the game (ratings cascade)
+  await dropFromList(gid, LIST);
   lastSig = ""; await render(true);
-  toast("Removed from " + labelOf(LIST) + ".");
+  toast(`Deleted “${name}” from ${labelOf(LIST)}.`);
+}
+
+async function dropFromList(gid, listKey){
+  const { error } = await sb.from("steamballot_boardgame_lists").delete().eq("game_id", gid).eq("list_key", listKey);
+  if(error){ toast("Couldn't remove: " + error.message); return; }
+  const { count } = await sb.from("steamballot_boardgame_lists")
+    .select("game_id", { count:"exact", head:true }).eq("game_id", gid);
+  if(!count){ await sb.from("steamballot_boardgames").delete().eq("game_id", gid); }
 }
 
 async function nextPos(listKey){
@@ -780,6 +887,37 @@ function toast(msg){
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3200);
 }
 function banner(msg){ return `<div class="empty"><div class="big">Setup needed</div>${msg}</div>`; }
+
+/* a small promise-based modal: askChoice(message, [{label,value,kind}]) -> value | null */
+function askChoice(message, options){
+  return new Promise(resolve => {
+    const modal = document.getElementById("modal");
+    const msg = document.getElementById("modalMsg");
+    const btns = document.getElementById("modalBtns");
+    msg.innerHTML = message;
+    btns.innerHTML = "";
+    let done = false;
+    const finish = (v) => {
+      if(done) return; done = true;
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+      document.removeEventListener("keydown", onKey);
+      resolve(v);
+    };
+    const onKey = (e) => { if(e.key === "Escape") finish(null); };
+    options.forEach(o => {
+      const b = document.createElement("button");
+      b.textContent = o.label;
+      if(o.kind) b.className = o.kind;
+      b.onclick = () => finish(o.value);
+      btns.appendChild(b);
+    });
+    modal.onclick = (e) => { if(e.target === modal) finish(null); };
+    document.addEventListener("keydown", onKey);
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden", "false");
+  });
+}
 
 /* ---------------- boot ---------------- */
 document.getElementById("addBtn").onclick = addGame;
