@@ -16,10 +16,17 @@ export default async function handler(req, res) {
   }
 
   try {
+    const token = process.env.BGG_TOKEN || "";
     const url = `https://boardgamegeek.com/xmlapi2/thing?id=${id}&stats=1`;
-    const r = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/xml" }
-    });
+    const headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+      "Accept": "application/xml, text/xml, */*"
+    };
+    // BGG now requires an authorized application token (Bearer <token>, no colon,
+    // domain WITHOUT www). Set BGG_TOKEN in your Vercel env vars.
+    if (token) headers["Authorization"] = "Bearer " + token;
+
+    const r = await fetch(url, { headers });
 
     // BGG is still building the response — tell the client to retry shortly.
     if (r.status === 202) {
@@ -28,9 +35,31 @@ export default async function handler(req, res) {
     }
 
     const xml = await r.text();
+
+    // upstream rejected us (most likely 401/403 = missing or bad token)
+    if (!r.ok) {
+      const needsAuth = (r.status === 401 || r.status === 403);
+      res.status(502).json({
+        error: needsAuth
+          ? "BGG requires an authorized application token. Register an app at boardgamegeek.com/applications, create a token, and set it as BGG_TOKEN in your Vercel environment variables."
+          : "BGG rejected the request",
+        id,
+        upstream_status: r.status,
+        token_present: !!token,
+        sample: xml.slice(0, 220)
+      });
+      return;
+    }
+
     const item = xml.match(/<item\b[^>]*>([\s\S]*?)<\/item>/i);
     if (!item) {
-      res.status(404).json({ error: "BGG returned no game for that id", id });
+      res.status(502).json({
+        error: "BGG returned no game (often a block page when the token is missing)",
+        id,
+        upstream_status: r.status,
+        token_present: !!token,
+        sample: xml.slice(0, 220)
+      });
       return;
     }
     const body = item[0];
