@@ -148,7 +148,7 @@
     background:linear-gradient(180deg,#2a1f4380 0%, var(--card) 60%);
   }
 
-  .row2{display:grid;grid-template-columns:auto auto 120px 1fr auto;align-items:center;gap:14px;padding:12px 16px}
+  .row2{display:grid;grid-template-columns:auto 120px 1fr;align-items:start;gap:14px;padding:14px 16px 12px}
 
   /* drag handle + rank */
   .rerank{display:flex;flex-direction:column;align-items:center;gap:5px}
@@ -168,28 +168,49 @@
   .sortable-chosen{cursor:grabbing}
   .sortable-drag{box-shadow:0 20px 50px -16px #000}
 
-  .thumb{width:120px;aspect-ratio:1/1;border-radius:8px;object-fit:cover;display:block;background:#15101f;border:1px solid var(--line-soft)}
+  .thumb{width:100%;aspect-ratio:1/1;border-radius:8px;object-fit:cover;display:block;background:#15101f;border:1px solid var(--line-soft)}
   .thumb.noart{background:linear-gradient(135deg,#241a3b,#191124)}
 
+  .thumb-link{display:block;width:120px;border-radius:8px;overflow:hidden;flex:none;transition:opacity .12s ease}
+  .thumb-link:hover{opacity:.88}
+
   .info{min-width:0}
-  .info .title{font-weight:600;font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .info .meta{color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.4}
-  .info .meta b{color:var(--text);font-weight:600}
-  .recs{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+  a.title{display:inline-block;max-width:100%;font-weight:600;font-size:17px;line-height:1.2;color:var(--text);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+  a.title:hover{color:var(--accent)}
+
+  /* metadata as stat tiles — spreads across the full info width */
+  .stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+  .stat{background:var(--card-2);border:1px solid var(--line-soft);border-radius:9px;padding:5px 11px;line-height:1.1}
+  .stat .sv{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:14.5px;color:var(--text)}
+  .stat .sl{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+  .stat.bgg .sv{color:var(--accent)}
+
+  .recs{display:flex;align-items:center;gap:5px;margin-top:9px;flex-wrap:wrap}
   .recs .rlabel{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-right:2px}
   .pchip{font-size:11px;color:var(--muted);background:var(--card-2);border:1px solid var(--line-soft);border-radius:20px;padding:2px 9px}
   .pchip.best{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:600}
-  .added{font-size:11px;color:var(--faint);margin-top:8px}
+  .added{font-size:11px;color:var(--faint);margin-top:9px}
 
-  /* ratings */
-  .rate{display:flex;align-items:center;gap:14px}
-  .scorewrap{text-align:center;min-width:48px}
-  .scorewrap .num{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:28px;line-height:1;color:var(--accent)}
-  .scorewrap .num.none{color:var(--faint)}
-  .scorewrap .cap{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:3px}
-  .yours{display:flex;flex-direction:column;gap:4px}
-  .yours label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
-  .yours select{padding:7px 9px;padding-right:26px;font-size:13.5px}
+  /* ratings: full-width row beneath the game info */
+  .ratings{display:flex;align-items:center;gap:16px;padding:11px 16px;border-top:1px solid var(--line-soft);flex-wrap:wrap}
+  .avgblock{text-align:center;min-width:50px}
+  .avgblock .num{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--accent)}
+  .avgblock .num.none{color:var(--faint)}
+  .avgblock .cap{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-top:3px}
+  .votes{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:140px}
+  .vote{display:inline-flex;align-items:center;gap:8px;background:var(--card-2);border:1px solid var(--line-soft);border-radius:20px;padding:4px 12px;font-size:12.5px}
+  .vote .vn{color:var(--muted);white-space:nowrap}
+  .vote .vv{font-family:"Chakra Petch",sans-serif;font-weight:700;color:var(--text);min-width:16px;text-align:center}
+  .vote.unrated .vv{color:var(--faint)}
+  .vote.me{border-color:var(--accent);background:rgba(169,120,255,.10);padding-right:5px}
+  .vote.me .vn{color:var(--text)}
+  .vote .rsel{
+    appearance:none;cursor:pointer;color:var(--text);font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:3px 22px 3px 11px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a99cc4' viewBox='0 0 16 16'><path d='M4 6l4 4 4-4'/></svg>");
+    background-repeat:no-repeat;background-position:right 7px center;
+  }
+  .vote .rsel:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(169,120,255,.18)}
 
   .kill{
     position:absolute;top:9px;right:10px;width:24px;height:24px;border-radius:7px;
@@ -209,17 +230,16 @@
   .spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:sp .7s linear infinite;vertical-align:-2px}
   @keyframes sp{to{transform:rotate(360deg)}}
 
+  .bgg-credit{margin-top:42px;text-align:center}
+  .bgg-credit a{display:inline-flex;align-items:center;gap:8px;color:var(--faint);font-size:12px;letter-spacing:.04em;text-decoration:none}
+  .bgg-credit a:hover{color:var(--muted)}
+  .bgg-badge{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;letter-spacing:.06em;color:#fff;background:#ff5100;border-radius:6px;padding:3px 8px}
+
   @media (max-width:600px){
-    .row2{
-      grid-template-columns:auto 96px 1fr;
-      grid-template-areas:"rerank thumb info" "rate rate rate";
-      row-gap:12px;
-    }
-    .rerank{grid-area:rerank;flex-direction:row;gap:6px}
-    .rerank .rank{order:-1}
-    .thumb{grid-area:thumb;width:96px}
-    .info{grid-area:info}
-    .rate{grid-area:rate;justify-content:space-between;border-top:1px solid var(--line-soft);padding-top:11px}
+    .row2{grid-template-columns:auto 88px 1fr;gap:12px}
+    .thumb-link{width:88px}
+    a.title{font-size:16px}
+    .ratings{gap:12px}
   }
   @media (prefers-reduced-motion:reduce){
     *{animation:none !important;transition:none !important}
@@ -259,6 +279,12 @@
 
   <div class="tabs" id="tabs"></div>
   <div class="board" id="board"></div>
+
+  <footer class="bgg-credit">
+    <a href="https://boardgamegeek.com" target="_blank" rel="noopener noreferrer" aria-label="Powered by BoardGameGeek">
+      <span>Powered by</span><span class="bgg-badge">BGG</span>
+    </a>
+  </footer>
 </div>
 
 <div id="toast"></div>
@@ -490,9 +516,9 @@ function card(g, rank, last){
   if(!g) return "";
   const gid = g.game_id;
   const avg = avgRating(gid);
-  const mine = myRating(gid);
   const top = rank === 1;
-  const fetching = !g.name; // shouldn't happen, but keep a spinner just in case
+  const url = bggUrl(gid);
+  const fetching = !g.name;
   return `<div class="card ${top?"top":""}" data-gid="${esc(gid)}">`+
     `<button class="kill" data-del="${esc(gid)}" title="Remove from this list" aria-label="Remove ${esc(g.name)}">×</button>`+
     `<div class="row2">`+
@@ -500,33 +526,63 @@ function card(g, rank, last){
         `<span class="grip" title="Drag to reorder" aria-label="Drag to reorder">`+gripIcon()+`</span>`+
         `<div class="rank">#${rank}</div>`+
       `</div>`+
-      `<img class="thumb" alt="${esc(g.name)} box art" data-img="${esc(g.image_url||"")}" loading="lazy">`+
+      `<a class="thumb-link" href="${url}" target="_blank" rel="noopener noreferrer" title="View on BoardGameGeek">`+
+        `<img class="thumb" alt="${esc(g.name)} box art" data-img="${esc(g.image_url||"")}" loading="lazy"></a>`+
       `<div class="info">`+
-        `<div class="title">${esc(g.name || ("BGG #" + gid))}</div>`+
-        (fetching ? `<div class="meta"><span class="spin"></span> fetching details…</div>` : `<div class="meta">${metaLine(g)}</div>`)+
+        `<a class="title" href="${url}" target="_blank" rel="noopener noreferrer">${esc(g.name || ("BGG #" + gid))}</a>`+
+        (fetching
+          ? `<div class="stats"><span class="stat"><span class="sv"><span class="spin"></span></span><span class="sl">fetching…</span></span></div>`
+          : statsBlock(g))+
         recLine(g)+
         addedLine(g)+
       `</div>`+
-      `<div class="rate">`+
-        `<div class="scorewrap"><div class="num ${avg==null?"none":""}">${avg==null?"–":avg}</div><div class="cap">our rating</div></div>`+
-        `<div class="yours"><label>Your rating</label>`+
-          `<select class="rsel" data-id="${esc(gid)}">`+
-            `<option value="">—</option>`+
-            [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${String(mine)===String(n)?"selected":""}>${n}</option>`).join("")+
-          `</select>`+
-        `</div>`+
-      `</div>`+
-    `</div></div>`;
+    `</div>`+
+    `<div class="ratings">`+
+      `<div class="avgblock"><div class="num ${avg==null?"none":""}">${avg==null?"–":avg}</div><div class="cap">group avg</div></div>`+
+      `<div class="votes">`+votesBlock(gid)+`</div>`+
+    `</div>`+
+  `</div>`;
 }
 
-function metaLine(g){
-  const bits = [];
-  if(g.year_published) bits.push(esc(String(g.year_published)));
-  const p = fmtPlayers(g); if(p) bits.push(p);
-  const t = fmtTime(g);    if(t) bits.push(t);
-  if(g.rating != null)  bits.push(`BGG <b>${esc(String(g.rating))}</b>`);
-  if(g.weight != null)  bits.push(`Weight <b>${esc(String(g.weight))}</b>`);
-  return bits.join(" &middot; ");
+function bggUrl(gid){ return "https://boardgamegeek.com/boardgame/" + encodeURIComponent(gid); }
+
+function statsBlock(g){
+  const tiles = [];
+  if(g.rating != null) tiles.push(stat(g.rating, "BGG rating", "bgg"));
+  const pa = g.min_players, pb = g.max_players;
+  let pv = "";
+  if(pa && pb) pv = (pa===pb) ? `${pa}` : `${pa}–${pb}`;
+  else if(pa) pv = `${pa}+`;
+  else if(pb) pv = `${pb}`;
+  if(pv) tiles.push(stat(pv, "Players"));
+  const t = fmtTime(g); if(t) tiles.push(stat(t, "Play time"));
+  if(g.weight != null) tiles.push(stat(g.weight, "Weight"));
+  if(g.year_published) tiles.push(stat(g.year_published, "Published"));
+  if(!tiles.length) return "";
+  return `<div class="stats">${tiles.join("")}</div>`;
+}
+function stat(val, label, cls){
+  return `<span class="stat ${cls||""}"><span class="sv">${esc(String(val))}</span><span class="sl">${esc(label)}</span></span>`;
+}
+
+/* every player's vote next to their name; the current user's is editable */
+function votesBlock(gid){
+  const r = RATINGS[gid] || {};
+  const ordered = [];
+  if(ME) ordered.push(ME);
+  for(const v of VOTERS){ if(!ME || v.id !== ME.id) ordered.push(v); }
+  return ordered.map(v => {
+    const val = r[v.id];
+    if(ME && v.id === ME.id){
+      const opts = `<option value="">–</option>` +
+        [1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${String(val||"")===String(n)?"selected":""}>${n}</option>`).join("");
+      return `<span class="vote me"><span class="vn">${esc(v.name)}</span>`+
+             `<select class="rsel" data-id="${esc(gid)}">${opts}</select></span>`;
+    }
+    const has = (val != null);
+    return `<span class="vote ${has?"":"unrated"}"><span class="vn">${esc(v.name)}</span>`+
+           `<span class="vv">${has?esc(String(val)):"–"}</span></span>`;
+  }).join("");
 }
 function recLine(g){
   let rec = []; try{ rec = JSON.parse(g.recommended_players || "[]"); }catch(_){ rec = []; }
