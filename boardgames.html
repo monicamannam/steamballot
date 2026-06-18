@@ -180,9 +180,9 @@
 
   /* metadata as stat tiles — spreads across the full info width */
   .stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
-  .stat{background:var(--card-2);border:1px solid var(--line-soft);border-radius:9px;padding:5px 11px;line-height:1.1}
-  .stat .sv{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:14.5px;color:var(--text)}
-  .stat .sl{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+  .stat{display:inline-flex;align-items:baseline;gap:7px;background:var(--card-2);border:1px solid var(--line-soft);border-radius:9px;padding:5px 11px}
+  .stat .sl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .stat .sv{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:14px;color:var(--text)}
   .stat.bgg .sv{color:var(--accent)}
 
   .recs{display:flex;align-items:center;gap:5px;margin-top:9px;flex-wrap:wrap}
@@ -562,7 +562,7 @@ function statsBlock(g){
   return `<div class="stats">${tiles.join("")}</div>`;
 }
 function stat(val, label, cls){
-  return `<span class="stat ${cls||""}"><span class="sv">${esc(String(val))}</span><span class="sl">${esc(label)}</span></span>`;
+  return `<span class="stat ${cls||""}"><span class="sl">${esc(label)}</span><span class="sv">${esc(String(val))}</span></span>`;
 }
 
 /* every player's vote next to their name; the current user's is editable */

@@ -201,9 +201,20 @@
   @media (prefers-reduced-motion:reduce){
     *{animation:none !important;transition:none !important}
   }
+  .nav{display:inline-flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:20px}
+  .nav a{
+    font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;
+    padding:7px 14px;border-radius:8px;color:var(--muted);
+  }
+  .nav a.on{background:var(--accent);color:var(--accent-ink)}
+  .nav a:not(.on):hover{color:var(--text)}
 </style>
 
 <div class="wrap">
+  <nav class="nav">
+    <a href="index.html" class="on">Steam</a>
+    <a href="boardgames.html">Board games</a>
+  </nav>
   <div class="eyebrow"><span class="dot"></span><span>Steam Showdown · 4 players</span></div>
   <h1>The Backlog Ballot</h1>
   <p class="tagline">Paste a Steam store link to nominate a game. Each of you gets one vote per game — the board ranks them live.</p>
