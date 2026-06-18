@@ -320,15 +320,25 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 /* ---------------- bgg fetch via /api/bgg (server-side) ---------------- */
 async function fetchBgg(id, tries=4){
   for(let i=0;i<tries;i++){
+    let r;
     try{
-      const r = await fetch("/api/bgg?id=" + encodeURIComponent(id));
-      if(r.status === 202){ await sleep(1500); continue; }  // BGG still building it
-      if(!r.ok) return null;
-      const d = await r.json();
-      return d && d.name ? d : null;
-    }catch(e){ console.warn("bgg fetch failed:", e.message); return null; }
+      r = await fetch("/api/bgg?id=" + encodeURIComponent(id));
+    }catch(e){
+      return { ok:false, msg:"Network error reaching /api/bgg: " + e.message };
+    }
+    if(r.status === 202){ await sleep(1500); continue; }  // BGG still building it
+    let d = null;
+    try{ d = await r.json(); }catch(_){ /* non-JSON, e.g. a 404 HTML page */ }
+    if(r.ok && d && d.name) return { ok:true, data:d };
+    // shape a useful message from whatever came back
+    if(r.status === 404 && !d){
+      return { ok:false, msg:"/api/bgg returned 404 — is api/bgg.js deployed at your repo root?" };
+    }
+    let msg = (d && d.error) ? d.error : ("/api/bgg returned " + r.status);
+    if(d && d.upstream_status) msg += " (BGG said " + d.upstream_status + ")";
+    return { ok:false, msg };
   }
-  return null;
+  return { ok:false, msg:"BGG kept replying \u201cbusy\u201d (202). Give it a few seconds and try again." };
 }
 /* map a fresh BGG payload onto a steamballot_boardgames row */
 function mapBgg(id, d, submittedBy){
@@ -651,8 +661,9 @@ async function addGame(){
     // already in our library? then we're just adding it to more lists
     let { data: ex } = await sb.from("steamballot_boardgames").select("game_id,name").eq("game_id", id).maybeSingle();
     if(!ex){
-      const d = await fetchBgg(id);
-      if(!d){ toast("Couldn't fetch that game from BGG — check the link and try again."); return; }
+      const res = await fetchBgg(id);
+      if(!res.ok){ toast(res.msg); return; }
+      const d = res.data;
       const { error } = await sb.from("steamballot_boardgames").insert(mapBgg(id, d, ME.id));
       if(error){ toast("Couldn't add: " + error.message); return; }
       ex = { game_id:id, name:d.name };
@@ -688,9 +699,9 @@ async function maybeRefreshStale(games){
 
   let changed = false;
   for(const g of stale){
-    const d = await fetchBgg(g.game_id);
-    if(d){
-      const patch = mapBgg(g.game_id, d, g.submitted_by); // refresh fields + updated_at
+    const res = await fetchBgg(g.game_id);
+    if(res.ok){
+      const patch = mapBgg(g.game_id, res.data, g.submitted_by); // refresh fields + updated_at
       delete patch.game_id;
       await sb.from("steamballot_boardgames").update(patch).eq("game_id", g.game_id);
       changed = true;
