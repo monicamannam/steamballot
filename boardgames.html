@@ -335,17 +335,12 @@
   </div>
 </div>
 
+<script src="config.js"></script>
 <!-- Supabase client (browser build) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- SortableJS: drag-to-reorder (mouse + touch) -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 <script>
-/* ============ CONFIG — same Supabase project as the Steam board ============ */
-const SUPABASE_URL      = 'https://axjdyxxwjqkzjptykjrk.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_bxbvx2jVlmlqx_UgjGBqnA_CicT3EFM'
-/* ========================================================================== */
-
-const CONFIGURED = !/YOUR-PROJECT|YOUR-ANON/.test(SUPABASE_URL + SUPABASE_ANON_KEY);
 let sb = null;
 
 /* identity is shared with the Steam page — same key, same voters table,
@@ -463,7 +458,7 @@ async function renderIdent(){
   ME = VOTERS.find(v => v.id === savedId) || null;
 
   if(VOTERS.length === 0){
-    el.innerHTML = `<span class="label">No players yet — add rows to the <code>steamballot_voters</code> table in Supabase, then hit Refresh.</span>`;
+    el.innerHTML = `<span class="label">No players yet — add player rows, then hit Refresh.</span>`;
     return;
   }
   if(ME){
@@ -928,15 +923,7 @@ document.getElementById("refreshBtn").onclick = async () => {
 };
 
 (async function init(){
-  if(!CONFIGURED){
-    document.getElementById("ident").innerHTML = `<span class="label">Supabase isn't configured yet.</span>`;
-    document.getElementById("board").innerHTML = banner("Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> near the top of boardgames.html, then redeploy.");
-    return;
-  }
-  if(!window.supabase || !window.supabase.createClient){
-    document.getElementById("board").innerHTML = banner("The Supabase library didn't load — check the script tag or your connection.");
-    return;
-  }
+  await loadConfig();
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   await renderIdent();
   await render(true);

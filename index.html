@@ -238,16 +238,10 @@
 
 <div id="toast"></div>
 
-<!-- Your Supabase credentials (kept in a separate file so app updates don't wipe them) -->
 <script src="config.js"></script>
 <!-- Supabase client (browser build) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* Credentials come from config.js (window.SUPABASE_URL / window.SUPABASE_ANON_KEY). */
-const SUPABASE_URL      = window.SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
-
-const CONFIGURED = !!(SUPABASE_URL && SUPABASE_ANON_KEY) && !/YOUR-PROJECT|YOUR-ANON/.test(SUPABASE_URL + SUPABASE_ANON_KEY);
 let sb = null;
 
 /* remember which voter this device is (fine now — not in the artifact sandbox) */
@@ -337,7 +331,7 @@ async function renderIdent(){
   ME = VOTERS.find(v => v.id === savedId) || null;
 
   if(VOTERS.length === 0){
-    el.innerHTML = `<span class="label">No players yet — add rows to the <code>steamballot_voters</code> table in Supabase, then hit Refresh.</span>`;
+    el.innerHTML = `<span class="label">No players yet — add player rows, then hit Refresh.</span>`;
     return;
   }
   if(ME){
@@ -575,15 +569,7 @@ document.getElementById("refreshBtn").onclick = async () => {
 };
 
 (async function init(){
-  if(!CONFIGURED){
-    document.getElementById("ident").innerHTML = `<span class="label">Supabase isn't configured yet.</span>`;
-    document.getElementById("board").innerHTML = banner("Add your <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in <code>config.js</code>, then redeploy.");
-    return;
-  }
-  if(!window.supabase || !window.supabase.createClient){
-    document.getElementById("board").innerHTML = banner("The Supabase library didn't load — check the script tag or your connection.");
-    return;
-  }
+  await loadConfig();
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   await renderIdent();
   await render(true);
