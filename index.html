@@ -153,6 +153,11 @@
   .scorewrap{text-align:center;min-width:46px}
   .scorewrap .num{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--accent)}
   .scorewrap .cap{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-top:3px}
+  .pricebox{min-width:92px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+  .price-current{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:22px;line-height:1;color:#9be28f}
+  .price-original{font-size:15px;line-height:1.15;color:var(--muted)}
+  .price-original.discounted{text-decoration:line-through;color:var(--faint)}
+  .price-date{font-size:11px;line-height:1.2;color:var(--faint);white-space:nowrap;margin-top:2px}
 
   .vote{
     font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.02em;font-size:13.5px;
@@ -197,6 +202,8 @@
     .rank{grid-area:rank}.thumb{grid-area:thumb;width:100px}.row2 .info{grid-area:info}
     .controls{grid-area:ctrl;justify-content:space-between;border-top:1px solid var(--line-soft);padding-top:10px}
     .vote{flex:1}
+    .pricebox{min-width:78px}
+    .price-current{font-size:20px}
   }
   @media (prefers-reduced-motion:reduce){
     *{animation:none !important;transition:none !important}
@@ -226,7 +233,7 @@
   <div class="add">
     <div class="head">
       <h2>Add a game</h2>
-      <div class="refresh"><span id="syncState">Synced</span> <button class="linkbtn" id="refreshBtn" title="Refresh from everyone">Refresh</button></div>
+      <div class="refresh"><span id="syncState">Synced</span> <button class="linkbtn" id="refreshBtn" title="Refresh from everyone">Refresh</button><button class="linkbtn" id="priceBtn" title="Fetch latest Steam prices">Fetch latest prices</button></div>
     </div>
     <div class="row">
       <input type="text" id="urlInput" placeholder="https://store.steampowered.com/app/…" autocomplete="off" spellcheck="false">
@@ -284,12 +291,18 @@ const BLANK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAE
 
 /* ---------------- metadata via /api/steam (Steam's own API, server-side) ----------------
    Falls back to the name from the URL if the function isn't deployed or Steam has nothing. */
-async function fetchMeta(appid, fallbackTitle){
+async function fetchMeta(appid, fallbackTitle, freshPrice){
   try{
-    const r = await fetch("/api/steam?appid=" + encodeURIComponent(appid));
+    const r = await fetch("/api/steam?appid=" + encodeURIComponent(appid) + (freshPrice ? "&fresh=1" : ""));
     if(!r.ok) throw new Error("status " + r.status);
     const d = await r.json();
-    if(d && d.title) return { title: d.title, description: d.description || "", image: httpsify(d.image) };
+    if(d && d.title) return {
+      title: d.title,
+      description: d.description || "",
+      image: httpsify(d.image),
+      priceInitial: centsOrNull(d.price_initial),
+      priceFinal: centsOrNull(d.price_final)
+    };
   }catch(e){ console.warn("steam meta fetch failed, using name from link:", e.message); }
   return null;
 }
@@ -312,7 +325,7 @@ async function loadVoters(){
 }
 async function loadGames(){
   const { data, error } = await sb.from("steamballot_games")
-    .select("app_id,title,description,slug,image_url,submitted_by,enriched,created_at");
+    .select("app_id,title,description,slug,image_url,submitted_by,enriched,created_at,price_initial,price_final,price_updated_at");
   if(error){ console.error(error); toast("Couldn't load games: " + error.message); return []; }
   return data || [];
 }
@@ -381,6 +394,9 @@ async function render(force){
       submittedBy: g.submitted_by,
       enriched: g.enriched,
       addedAt: g.created_at ? Date.parse(g.created_at) : 0,
+      priceInitial: centsOrNull(g.price_initial),
+      priceFinal: centsOrNull(g.price_final),
+      priceUpdatedAt: g.price_updated_at || "",
       voterIds: byGame[g.app_id] || []
     }));
     list.sort((a,b) =>
@@ -389,7 +405,7 @@ async function render(force){
       String(a.title).localeCompare(String(b.title))
     );
 
-    const sig = JSON.stringify(list.map(g => [g.appid, g.title, g.desc, g.image, g.voterIds.slice().sort().join(",")])) + "|" + (ME ? ME.id : "");
+    const sig = JSON.stringify(list.map(g => [g.appid, g.title, g.desc, g.image, g.priceInitial, g.priceFinal, g.priceUpdatedAt, g.voterIds.slice().sort().join(",")])) + "|" + (ME ? ME.id : "");
     if(!force && sig === lastSig) return;
     lastSig = sig;
 
@@ -405,6 +421,17 @@ async function render(force){
 }
 
 function scoreBlock(g){ return `<div class="scorewrap"><div class="num">${g.voterIds.length}</div><div class="cap">votes</div></div>`; }
+function priceBlock(g){
+  const finalText = formatPrice(g.priceFinal);
+  const initialText = formatPrice(g.priceInitial);
+  const discounted = g.priceInitial != null && g.priceFinal != null && g.priceInitial > g.priceFinal;
+  const dateText = formatPriceDate(g.priceUpdatedAt);
+  return `<div class="pricebox" title="Price updated ${esc(dateText)}">`+
+    `<div class="price-current">${esc(finalText)}</div>`+
+    `<div class="price-original ${discounted?"discounted":""}">${esc(initialText)}</div>`+
+    `<div class="price-date">${esc(dateText)}</div>`+
+  `</div>`;
+}
 function voteBtn(g){
   const voted = ME && g.voterIds.includes(ME.id);
   const dis = ME ? "" : "disabled";
@@ -444,7 +471,7 @@ function champCard(g){
       gameImg(g, "art")+
       `<div class="meta">`+
         titleLink(g)+ descBlock(g)+ voterChips(g)+
-        `<div class="controls" style="margin-top:6px">`+ scoreBlock(g)+ voteBtn(g)+`</div>`+
+        `<div class="controls" style="margin-top:6px">`+ scoreBlock(g)+ voteBtn(g)+ priceBlock(g)+`</div>`+
         addedLine(g)+
       `</div>`+
     `</div></div>`;
@@ -458,7 +485,7 @@ function rowCard(g, rank){
       `<div class="info">`+
         titleLink(g)+ descBlock(g)+ voterChips(g)+ addedLine(g)+
       `</div>`+
-      `<div class="controls">`+ scoreBlock(g)+ voteBtn(g)+`</div>`+
+      `<div class="controls">`+ scoreBlock(g)+ voteBtn(g)+ priceBlock(g)+`</div>`+
     `</div></div>`;
 }
 function wireCards(){
@@ -539,13 +566,62 @@ async function addGame(){
   // enrich title + description from Steam in the background
   const meta = await fetchMeta(parsed.appid, fallback);
   const patch = meta
-    ? { title: meta.title || fallback, description: meta.description || "", image_url: meta.image || "", enriched: true }
+    ? {
+        title: meta.title || fallback,
+        description: meta.description || "",
+        image_url: meta.image || "",
+        enriched: true,
+        price_initial: meta.priceInitial,
+        price_final: meta.priceFinal,
+        price_updated_at: new Date().toISOString()
+      }
     : { enriched: true };                          // stop the spinner even if Steam had nothing
   await sb.from("steamballot_games").update(patch).eq("app_id", parsed.appid);
   await render(true);
 }
 
+async function fetchLatestPrices(){
+  if(!sb) return;
+  const btn = document.getElementById("priceBtn");
+  const s = document.getElementById("syncState");
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = "Fetching prices…"; s.textContent = "Fetching prices…";
+  try{
+    const games = await loadGames();
+    for(const g of games){
+      const meta = await fetchMeta(g.app_id, g.title || "", true);
+      if(!meta) continue;
+      await sb.from("steamballot_games").update({
+        price_initial: meta.priceInitial,
+        price_final: meta.priceFinal,
+        price_updated_at: new Date().toISOString()
+      }).eq("app_id", g.app_id);
+    }
+    await render(true);
+    toast("Updated prices for " + games.length + " games.");
+  }finally{
+    btn.disabled = false; btn.textContent = orig; s.textContent = "Synced";
+  }
+}
+
 /* ---------------- helpers ---------------- */
+function centsOrNull(v){
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function formatPrice(cents){
+  if(cents == null) return "—";
+  if(cents === 0) return "$0";
+  if(cents === 99900) return "$999";
+  const dollars = cents / 100;
+  return "$" + dollars.toFixed(cents % 100 === 0 ? 0 : 2);
+}
+function formatPriceDate(iso){
+  if(!iso) return "not updated";
+  const d = new Date(iso);
+  if(Number.isNaN(d.getTime())) return "not updated";
+  return d.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+}
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function initials(name){
   const p = String(name||"").trim().split(/\s+/);
@@ -567,6 +643,7 @@ document.getElementById("refreshBtn").onclick = async () => {
   const s = document.getElementById("syncState"); s.textContent = "Refreshing…";
   await render(true); s.textContent = "Synced";
 };
+document.getElementById("priceBtn").onclick = fetchLatestPrices;
 
 (async function init(){
   await loadConfig();
