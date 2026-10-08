@@ -123,6 +123,35 @@
     animation:hotDealSweep 2.1s ease-in-out .35s infinite;
   }
   .card.hot-deal .body,.card.hot-deal .row2,.card.hot-deal .crownrow{position:relative;z-index:1}
+  .card.super-deal{
+    border-color:rgba(255,77,104,1);
+    border-width:2px;
+    background:
+      radial-gradient(circle at 84% 50%,rgba(255,77,104,.5),transparent 30%),
+      radial-gradient(circle at 12% 50%,rgba(255,155,47,.36),transparent 24%),
+      linear-gradient(90deg,rgba(255,77,104,.34),rgba(255,155,47,.22),rgba(255,77,104,0) 54%),
+      var(--card);
+    outline:2px solid rgba(255,77,104,.38);
+    outline-offset:3px;
+    animation:rise .35s ease both, superDealGlow .78s ease-in-out .35s infinite, superDealShake 1.6s ease-in-out .35s infinite;
+  }
+  .card.super-deal::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(circle at 12% 24%,rgba(255,77,104,.95) 0 2px,transparent 3px),
+      radial-gradient(circle at 28% 76%,rgba(255,155,47,.95) 0 2px,transparent 3px),
+      radial-gradient(circle at 68% 18%,rgba(255,217,90,.95) 0 2px,transparent 3px),
+      radial-gradient(circle at 92% 72%,rgba(255,77,104,.95) 0 2px,transparent 3px);
+    opacity:.9;
+    animation:superSparkJitter .45s steps(2,end) .35s infinite;
+  }
+  .card.super-deal::after{
+    content:"";position:absolute;inset:-2px auto -2px 0;width:7px;pointer-events:none;z-index:2;
+    background:linear-gradient(180deg,#ff4d68,#ff9b2f,#ffd95a,#ff4d68);
+    box-shadow:0 0 18px rgba(255,77,104,.9),0 0 36px rgba(255,155,47,.46);
+    animation:superDealRail .5s ease-in-out .35s infinite;
+  }
+  .card.super-deal .body,.card.super-deal .row2,.card.super-deal .crownrow{position:relative;z-index:1}
   @keyframes hotDealGlow{
     0%,100%{box-shadow:0 0 12px rgba(181,255,104,.22), inset 0 0 0 1px rgba(181,255,104,.18)}
     50%{box-shadow:0 0 42px rgba(181,255,104,.48), inset 0 0 0 1px rgba(181,255,104,.42)}
@@ -130,6 +159,27 @@
   @keyframes hotDealSweep{
     0%{transform:translateX(-120%)}
     44%,100%{transform:translateX(120%)}
+  }
+  @keyframes superDealGlow{
+    0%,100%{box-shadow:0 0 30px rgba(255,77,104,.52),0 0 72px rgba(255,155,47,.2), inset 0 0 0 1px rgba(255,77,104,.38)}
+    50%{box-shadow:0 0 86px rgba(255,77,104,.88),0 0 104px rgba(255,155,47,.38), inset 0 0 0 1px rgba(255,77,104,.7)}
+  }
+  @keyframes superSparkJitter{
+    0%{transform:translate(0,0) scale(1)}
+    50%{transform:translate(11px,-7px) scale(1.03)}
+    100%{transform:translate(-7px,8px) scale(1)}
+  }
+  @keyframes superDealShake{
+    0%,100%{transform:translateX(0)}
+    12%{transform:translateX(-1px)}
+    24%{transform:translateX(2px)}
+    36%{transform:translateX(-1px)}
+    48%{transform:translateX(1px)}
+    60%{transform:translateX(0)}
+  }
+  @keyframes superDealRail{
+    0%,100%{filter:brightness(1);opacity:.78}
+    50%{filter:brightness(1.75);opacity:1}
   }
 
   .champ{
@@ -180,9 +230,26 @@
   .price-current{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:22px;line-height:1;color:#9be28f}
   .pricebox.hot{animation:pricePop 1.45s ease-in-out .35s infinite}
   .pricebox.hot .price-current{color:#b5ff68;text-shadow:0 0 14px rgba(181,255,104,.44)}
+  .pricebox.super{
+    background:rgba(7,21,33,.72);
+    border:1px solid rgba(255,77,104,.72);
+    border-radius:12px;
+    padding:7px 9px;
+    box-shadow:0 0 30px rgba(255,77,104,.62),0 0 48px rgba(255,155,47,.24), inset 0 0 0 1px rgba(255,77,104,.22);
+    animation:superPriceBounce .58s ease-in-out .35s infinite;
+  }
+  .pricebox.super .price-current{
+    color:#ff4d68;
+    font-size:28px;
+    text-shadow:0 0 12px rgba(255,77,104,.95),0 0 28px rgba(255,77,104,.72),0 0 44px rgba(255,155,47,.4);
+  }
   @keyframes pricePop{
     0%,100%{transform:scale(1)}
     50%{transform:scale(1.06)}
+  }
+  @keyframes superPriceBounce{
+    0%,100%{transform:translateY(0) scale(1)}
+    50%{transform:translateY(-5px) scale(1.15)}
   }
   .price-original{font-size:15px;line-height:1.15;color:var(--muted)}
   .price-original.discounted{text-decoration:line-through;color:var(--faint)}
@@ -451,16 +518,28 @@ async function render(force){
 }
 
 function scoreBlock(g){ return `<div class="scorewrap"><div class="num">${g.voterIds.length}</div><div class="cap">votes</div></div>`; }
+function isDiscounted(g){
+  return g.priceInitial != null && g.priceFinal != null && g.priceInitial > g.priceFinal;
+}
+function isSuperDeal(g){
+  return isDiscounted(g) && g.priceFinal < 500;
+}
 function isHotDeal(g){
-  return g.priceInitial != null && g.priceFinal != null && g.priceInitial > g.priceFinal && g.priceFinal < 1000;
+  return isDiscounted(g) && g.priceFinal < 1000 && !isSuperDeal(g);
+}
+function dealClass(g){
+  if(isSuperDeal(g)) return "super-deal";
+  if(isHotDeal(g)) return "hot-deal";
+  return "";
 }
 function priceBlock(g){
   const finalText = formatPrice(g.priceFinal);
   const initialText = formatPrice(g.priceInitial);
-  const discounted = g.priceInitial != null && g.priceFinal != null && g.priceInitial > g.priceFinal;
+  const discounted = isDiscounted(g);
+  const superDeal = isSuperDeal(g);
   const hot = isHotDeal(g);
   const dateText = formatPriceDate(g.priceUpdatedAt);
-  return `<div class="pricebox ${hot?"hot":""}" title="Price updated ${esc(dateText)}">`+
+  return `<div class="pricebox ${superDeal?"super":(hot?"hot":"")}" title="Price updated ${esc(dateText)}">`+
     `<div class="price-current">${esc(finalText)}</div>`+
     `<div class="price-original ${discounted?"discounted":""}">${esc(initialText)}</div>`+
     `<div class="price-date">${esc(dateText)}</div>`+
@@ -498,7 +577,7 @@ function descBlock(g){
 }
 
 function champCard(g){
-  return `<div class="card champ ${isHotDeal(g)?"hot-deal":""}">`+
+  return `<div class="card champ ${dealClass(g)}">`+
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="crownrow">`+crown()+`Leader</div>`+
     `<div class="body">`+
@@ -511,7 +590,7 @@ function champCard(g){
     `</div></div>`;
 }
 function rowCard(g, rank){
-  return `<div class="card ${isHotDeal(g)?"hot-deal":""}">`+
+  return `<div class="card ${dealClass(g)}">`+
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="row2">`+
       `<div class="rank">#${rank}</div>`+
