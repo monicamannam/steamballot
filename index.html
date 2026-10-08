@@ -108,6 +108,29 @@
     animation:rise .35s ease both;
   }
   @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card.hot-deal{
+    border-color:rgba(181,255,104,.72);
+    background:
+      radial-gradient(circle at 92% 50%,rgba(181,255,104,.18),transparent 24%),
+      linear-gradient(90deg,rgba(181,255,104,.18),rgba(181,255,104,0) 42%),
+      var(--card);
+    animation:rise .35s ease both, hotDealGlow 1.45s ease-in-out .35s infinite;
+  }
+  .card.hot-deal::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background:linear-gradient(115deg,transparent 0%,transparent 36%,rgba(255,255,255,.2) 46%,transparent 58%,transparent 100%);
+    transform:translateX(-120%);
+    animation:hotDealSweep 2.1s ease-in-out .35s infinite;
+  }
+  .card.hot-deal .body,.card.hot-deal .row2,.card.hot-deal .crownrow{position:relative;z-index:1}
+  @keyframes hotDealGlow{
+    0%,100%{box-shadow:0 0 12px rgba(181,255,104,.22), inset 0 0 0 1px rgba(181,255,104,.18)}
+    50%{box-shadow:0 0 42px rgba(181,255,104,.48), inset 0 0 0 1px rgba(181,255,104,.42)}
+  }
+  @keyframes hotDealSweep{
+    0%{transform:translateX(-120%)}
+    44%,100%{transform:translateX(120%)}
+  }
 
   .champ{
     border-color:var(--gold-soft);
@@ -155,6 +178,12 @@
   .scorewrap .cap{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-top:3px}
   .pricebox{min-width:92px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
   .price-current{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:22px;line-height:1;color:#9be28f}
+  .pricebox.hot{animation:pricePop 1.45s ease-in-out .35s infinite}
+  .pricebox.hot .price-current{color:#b5ff68;text-shadow:0 0 14px rgba(181,255,104,.44)}
+  @keyframes pricePop{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.06)}
+  }
   .price-original{font-size:15px;line-height:1.15;color:var(--muted)}
   .price-original.discounted{text-decoration:line-through;color:var(--faint)}
   .price-date{font-size:11px;line-height:1.2;color:var(--faint);white-space:nowrap;margin-top:2px}
@@ -421,12 +450,16 @@ async function render(force){
 }
 
 function scoreBlock(g){ return `<div class="scorewrap"><div class="num">${g.voterIds.length}</div><div class="cap">votes</div></div>`; }
+function isHotDeal(g){
+  return g.priceInitial != null && g.priceFinal != null && g.priceInitial > g.priceFinal && g.priceFinal < 1000;
+}
 function priceBlock(g){
   const finalText = formatPrice(g.priceFinal);
   const initialText = formatPrice(g.priceInitial);
   const discounted = g.priceInitial != null && g.priceFinal != null && g.priceInitial > g.priceFinal;
+  const hot = isHotDeal(g);
   const dateText = formatPriceDate(g.priceUpdatedAt);
-  return `<div class="pricebox" title="Price updated ${esc(dateText)}">`+
+  return `<div class="pricebox ${hot?"hot":""}" title="Price updated ${esc(dateText)}">`+
     `<div class="price-current">${esc(finalText)}</div>`+
     `<div class="price-original ${discounted?"discounted":""}">${esc(initialText)}</div>`+
     `<div class="price-date">${esc(dateText)}</div>`+
@@ -464,7 +497,7 @@ function descBlock(g){
 }
 
 function champCard(g){
-  return `<div class="card champ">`+
+  return `<div class="card champ ${isHotDeal(g)?"hot-deal":""}">`+
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="crownrow">`+crown()+`Leader</div>`+
     `<div class="body">`+
@@ -477,7 +510,7 @@ function champCard(g){
     `</div></div>`;
 }
 function rowCard(g, rank){
-  return `<div class="card">`+
+  return `<div class="card ${isHotDeal(g)?"hot-deal":""}">`+
     `<button class="kill" data-del="${g.appid}" title="Remove from board" aria-label="Remove ${esc(g.title)}">×</button>`+
     `<div class="row2">`+
       `<div class="rank">#${rank}</div>`+
