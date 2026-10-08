@@ -408,6 +408,7 @@ function renderPicker(){
 /* ---------------- board ---------------- */
 let lastSig = "";
 let refreshing = false;
+const PRICE_STALE_MS = 7 * 24 * 60 * 60 * 1000;
 
 async function render(force){
   if(!sb || refreshing) return;
@@ -621,20 +622,42 @@ async function fetchLatestPrices(){
   btn.disabled = true; btn.textContent = "Fetching prices…"; s.textContent = "Fetching prices…";
   try{
     const games = await loadGames();
-    for(const g of games){
-      const meta = await fetchMeta(g.app_id, g.title || "", true);
-      if(!meta) continue;
-      await sb.from("steamballot_games").update({
-        price_initial: meta.priceInitial,
-        price_final: meta.priceFinal,
-        price_updated_at: new Date().toISOString()
-      }).eq("app_id", g.app_id);
-    }
+    for(const g of games){ await updateGamePrice(g); }
     await render(true);
     toast("Updated prices for " + games.length + " games.");
   }finally{
     btn.disabled = false; btn.textContent = orig; s.textContent = "Synced";
   }
+}
+
+async function updateGamePrice(g){
+  const meta = await fetchMeta(g.app_id, g.title || "", true);
+  if(!meta) return false;
+  await sb.from("steamballot_games").update({
+    price_initial: meta.priceInitial,
+    price_final: meta.priceFinal,
+    price_updated_at: new Date().toISOString()
+  }).eq("app_id", g.app_id);
+  return true;
+}
+
+function isPriceStale(g){
+  const t = g.price_updated_at ? Date.parse(g.price_updated_at) : 0;
+  return !t || (Date.now() - t) > PRICE_STALE_MS;
+}
+
+async function refreshStalePrices(){
+  if(!sb) return;
+  const games = await loadGames();
+  const stale = games.filter(isPriceStale);
+  if(stale.length === 0) return;
+
+  const s = document.getElementById("syncState");
+  s.textContent = "Updating old prices…";
+  for(const g of stale){ await updateGamePrice(g); }
+  await render(true);
+  s.textContent = "Synced";
+  toast("Refreshed old prices for " + stale.length + " games.");
 }
 
 /* ---------------- helpers ---------------- */
@@ -683,6 +706,7 @@ document.getElementById("priceBtn").onclick = fetchLatestPrices;
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   await renderIdent();
   await render(true);
+  refreshStalePrices();
   setInterval(() => render(false), 9000);  // light auto-sync between players
 })();
 </script>
