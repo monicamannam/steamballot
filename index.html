@@ -539,9 +539,10 @@ function priceBlock(g){
   const superDeal = isSuperDeal(g);
   const hot = isHotDeal(g);
   const dateText = formatPriceDate(g.priceUpdatedAt);
+  const originalLine = discounted ? `<div class="price-original discounted">${esc(initialText)}</div>` : "";
   return `<div class="pricebox ${superDeal?"super":(hot?"hot":"")}" title="Price updated ${esc(dateText)}">`+
     `<div class="price-current">${esc(finalText)}</div>`+
-    `<div class="price-original ${discounted?"discounted":""}">${esc(initialText)}</div>`+
+    originalLine+
     `<div class="price-date">${esc(dateText)}</div>`+
   `</div>`;
 }
