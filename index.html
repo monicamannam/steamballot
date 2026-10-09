@@ -227,7 +227,8 @@
   .scorewrap .num{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--accent)}
   .scorewrap .cap{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-top:3px}
   .pricebox{min-width:92px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
-  .price-current{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:22px;line-height:1;color:#9be28f}
+  .price-current{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:22px;line-height:1;color:var(--accent)}
+  .pricebox.discounted .price-current{color:#9be28f}
   .pricebox.hot{animation:pricePop 1.45s ease-in-out .35s infinite}
   .pricebox.hot .price-current{color:#b5ff68;text-shadow:0 0 14px rgba(181,255,104,.44)}
   .pricebox.super{
@@ -540,7 +541,7 @@ function priceBlock(g){
   const hot = isHotDeal(g);
   const dateText = formatPriceDate(g.priceUpdatedAt);
   const originalLine = discounted ? `<div class="price-original discounted">${esc(initialText)}</div>` : "";
-  return `<div class="pricebox ${superDeal?"super":(hot?"hot":"")}" title="Price updated ${esc(dateText)}">`+
+  return `<div class="pricebox ${superDeal?"super":(hot?"hot":(discounted?"discounted":""))}" title="Price updated ${esc(dateText)}">`+
     `<div class="price-current">${esc(finalText)}</div>`+
     originalLine+
     `<div class="price-date">${esc(dateText)}</div>`+
