@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BHOF · The Backlog Ballot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:dark;
+    --ink:#0d141d;--ink-2:#101a25;--panel:#16212e;--card:#1b2836;
+    --line:#2a3a4c;--line-soft:#223040;--text:#e8eef4;--muted:#90a4b8;
+    --accent:#f6c453;--accent-ink:#302000;--r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--text);
+    background:radial-gradient(1100px 520px at 50% -8%,#302b21 0%,transparent 60%),linear-gradient(180deg,var(--ink),var(--ink-2));
+    background-attachment:fixed;min-height:100vh;line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 80px}
+  a{color:inherit;text-decoration:none}
+  .nav{display:inline-flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:20px}
+  .nav a{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;padding:7px 14px;border-radius:8px;color:var(--muted)}
+  .nav a.on{background:var(--accent);color:var(--accent-ink)}
+  .nav a:not(.on):hover{color:var(--text)}
+  .eyebrow{font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.26em;text-transform:uppercase;font-size:12px;color:var(--accent)}
+  h1{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:clamp(34px,8vw,52px);line-height:1.05;letter-spacing:-.01em;margin:.28em 0 .15em}
+  .tagline{color:var(--muted);font-size:14.5px}
+  .gallery{margin-top:24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .card{min-width:0;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r);overflow:hidden}
+  .artlink{display:block}
+  .art{display:block;width:100%;aspect-ratio:460/215;object-fit:cover;background:linear-gradient(135deg,#2f3440,#15202b)}
+  .meta{padding:15px 16px 17px}
+  .title{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:21px;line-height:1.2;margin:0 0 8px;overflow-wrap:anywhere}
+  .title a:hover{color:var(--accent)}
+  .date{font-size:12px;color:var(--muted);margin:0}
+  .date time{color:var(--accent);white-space:nowrap}
+  .empty{grid-column:1/-1;text-align:center;padding:48px 20px;border:1px dashed var(--line);border-radius:var(--r);color:var(--muted)}
+  .empty strong{display:block;font-family:"Chakra Petch",sans-serif;font-size:18px;color:var(--text);margin-bottom:6px}
+  .add{margin-top:28px;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+  .add h2{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 14px}
+  .fields{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px}
+  label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);min-width:0}
+  input{font-family:inherit;font-size:14px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0}
+  a:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .hint{margin:10px 0 14px;font-size:12px;color:var(--muted)}
+  .btn{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:14px;cursor:pointer;border-radius:10px;padding:10px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.5;cursor:default}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);padding:11px 18px;border-radius:12px;font-size:13.5px;box-shadow:0 14px 40px -16px #000;opacity:0;pointer-events:none;max-width:90vw;width:max-content}
+  #toast.show{opacity:1}
+  @media(max-width:560px){.gallery,.fields{grid-template-columns:1fr}.gallery{gap:14px}.btn{width:100%}}
+</style>
+
+<main class="wrap">
+  <nav class="nav" aria-label="Main navigation">
+    <a href="index.html">Steam</a>
+    <a href="boardgames.html">Board games</a>
+    <a href="bhof.html" class="on" aria-current="page">BHOF</a>
+  </nav>
+  <div class="eyebrow">The Backlog Ballot</div>
+  <h1>BHOF</h1>
+  <p class="tagline">Our gaming hall of fame.</p>
+
+  <section class="gallery" id="gallery" aria-label="Hall of fame games" aria-busy="true">
+    <div class="empty">Loading the hall of fame…</div>
+  </section>
+
+  <form class="add" id="addForm">
+    <h2>Add to the hall of fame</h2>
+    <div class="fields">
+      <label for="urlInput">Steam store URL
+        <input type="url" id="urlInput" placeholder="https://store.steampowered.com/app/…" required autocomplete="off" spellcheck="false">
+      </label>
+      <label for="dateInput">Hall-of-fame date
+        <input type="date" id="dateInput" aria-describedby="dateHint">
+      </label>
+    </div>
+    <p class="hint" id="dateHint">Leave the date blank to use today's date.</p>
+    <button class="btn" id="addBtn" type="submit" disabled>Add to BHOF</button>
+  </form>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+let sb = null;
+let saving = false;
+let toastTimer;
+const BLANK_IMG = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
+function parseSteam(raw){
+  try{
+    const url = new URL(raw.trim());
+    if(!["http:","https:"].includes(url.protocol) || url.hostname !== "store.steampowered.com") return null;
+    const match = url.pathname.match(/^\/app\/(\d+)(?:\/|$)/);
+    return match ? match[1] : null;
+  }catch(_){ return null; }
+}
+function today(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function formatDate(value){
+  // Date-only values stay in local calendar time rather than shifting with UTC.
+  const [year,month,day] = value.split("-").map(Number);
+  return new Date(year,month-1,day).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+}
+function esc(value){
+  return String(value == null ? "" : value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function card(game){
+  const url = "https://store.steampowered.com/app/" + encodeURIComponent(game.app_id) + "/";
+  return `<article class="card">`+
+    `<a class="artlink" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="View ${esc(game.title)} on Steam">`+
+      `<img class="art" data-appid="${esc(game.app_id)}" data-image="${esc(game.image_url)}" alt="${esc(game.title)} artwork" loading="lazy"></a>`+
+    `<div class="meta"><h2 class="title"><a href="${url}" target="_blank" rel="noopener noreferrer">${esc(game.title)}</a></h2>`+
+      `<p class="date">Hall of famed <time datetime="${esc(game.hall_of_famed_on)}">${esc(formatDate(game.hall_of_famed_on))}</time></p></div>`+
+    `</article>`;
+}
+function wireImages(){
+  document.querySelectorAll(".art[data-appid]").forEach(img=>{
+    const candidates = [...new Set([
+      img.dataset.image,
+      "https://cdn.cloudflare.steamstatic.com/steam/apps/" + encodeURIComponent(img.dataset.appid) + "/header.jpg",
+      "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/" + encodeURIComponent(img.dataset.appid) + "/header.jpg"
+    ].filter(Boolean))];
+    const next = ()=>{
+      if(candidates.length){ img.src = candidates.shift(); }
+      else { img.onerror = null; img.src = BLANK_IMG; }
+    };
+    img.onerror = next;
+    next();
+  });
+}
+async function render(){
+  const gallery = document.getElementById("gallery");
+  gallery.setAttribute("aria-busy","true");
+  try{
+    const {data,error} = await sb.from("steamballot_bhof")
+      .select("app_id,title,image_url,hall_of_famed_on")
+      .order("hall_of_famed_on",{ascending:false}).order("title");
+    if(error) throw error;
+    gallery.innerHTML = data && data.length ? data.map(card).join("") :
+      `<div class="empty"><strong>The hall of fame starts here</strong>Add a Steam game below to give it a place in BHOF.</div>`;
+    wireImages();
+  }finally{ gallery.setAttribute("aria-busy","false"); }
+}
+async function addGame(event){
+  event.preventDefault();
+  if(!sb || saving) return;
+  const input = document.getElementById("urlInput");
+  const dateInput = document.getElementById("dateInput");
+  const appid = parseSteam(input.value);
+  if(!appid){ toast("Paste a Steam store game URL."); input.focus(); return; }
+  const date = dateInput.value || today();
+  const btn = document.getElementById("addBtn");
+  saving = true;
+  btn.disabled = true;
+  btn.textContent = "Adding…";
+  try{
+    const response = await fetch("/api/steam?appid=" + encodeURIComponent(appid));
+    if(!response.ok) throw new Error("Couldn't fetch this game from Steam.");
+    const game = await response.json();
+    if(!game.title) throw new Error("Steam didn't return a game title.");
+    const {error} = await sb.from("steamballot_bhof").insert({
+      app_id:appid,title:game.title,image_url:(game.image || "").replace(/^http:\/\//i,"https://"),hall_of_famed_on:date
+    });
+    if(error){
+      if(error.code === "23505") throw new Error("That game is already in BHOF.");
+      throw error;
+    }
+    input.value = "";
+    dateInput.value = "";
+    await render();
+    toast(game.title + " added to BHOF.");
+  }catch(error){ toast(error.message || "Couldn't add this game."); }
+  finally{ saving = false;btn.disabled = false;btn.textContent = "Add to BHOF"; }
+}
+function toast(message){
+  const el = document.getElementById("toast");
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"),4000);
+}
+
+document.getElementById("addForm").addEventListener("submit",addGame);
+(async function init(){
+  try{
+    await loadConfig();
+    sb = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    await render();
+    document.getElementById("addBtn").disabled = false;
+  }catch(error){
+    document.getElementById("gallery").innerHTML = `<div class="empty"><strong>Couldn't load BHOF</strong>Please check the Supabase setup and reload.</div>`;
+    document.getElementById("gallery").setAttribute("aria-busy","false");
+    toast(error.message || "Couldn't load BHOF.");
+  }
+})();
+</script>
+</html>
