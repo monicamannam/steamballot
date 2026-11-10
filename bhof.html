@@ -42,7 +42,6 @@
   .tagline{color:var(--muted);font-size:14.5px}
   .gallery{margin-top:24px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
   .card{min-width:0;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r);overflow:hidden}
-  .artlink{display:block}
   .art{display:block;width:100%;aspect-ratio:460/215;object-fit:cover;background:linear-gradient(135deg,#2f3440,#15202b)}
   .meta{padding:15px 16px 17px}
   .title{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:21px;line-height:1.2;margin:0 0 8px;overflow-wrap:anywhere}
@@ -122,8 +121,7 @@ function esc(value){
 function card(game){
   const url = "https://store.steampowered.com/app/" + encodeURIComponent(game.app_id) + "/";
   return `<article class="card">`+
-    `<a class="artlink" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="View ${esc(game.title)} on Steam">`+
-      `<img class="art" data-appid="${esc(game.app_id)}" data-image="${esc(game.image_url)}" alt="${esc(game.title)} artwork" loading="lazy"></a>`+
+    `<img class="art" data-appid="${esc(game.app_id)}" data-image="${esc(game.image_url)}" alt="${esc(game.title)} artwork" loading="lazy">`+
     `<div class="meta"><h2 class="title"><a href="${url}" target="_blank" rel="noopener noreferrer">${esc(game.title)}</a></h2>`+
       `<p class="date">Inducted <time datetime="${esc(game.hall_of_famed_on)}">${esc(formatDate(game.hall_of_famed_on))}</time></p></div>`+
     `</article>`;
