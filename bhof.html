@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Broforce Hall of Fall</title>
+<title>Broforce Hall of Fame</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -69,19 +69,19 @@
     <a href="boardgames.html">Board games</a>
     <a href="bhof.html" class="on" aria-current="page">BHOF</a>
   </nav>
-  <h1><span class="broforce">Broforce</span> Hall of Fall</h1>
+  <h1><span class="broforce">Broforce</span> Hall of Fame</h1>
   <p class="tagline">Here we remember all the games that have been broforced.</p>
 
-  <section class="gallery" id="gallery" aria-label="Hall of Fall games" aria-busy="true">
-    <div class="empty">Loading the Hall of Fall…</div>
+  <section class="gallery" id="gallery" aria-label="Hall of Fame games" aria-busy="true">
+    <div class="empty">Loading the Hall of Fame…</div>
   </section>
 
-  <form class="add" id="addForm" aria-label="Add a game to Broforce Hall of Fall">
+  <form class="add" id="addForm" aria-label="Add a game to Broforce Hall of Fame">
     <div class="fields">
       <label for="urlInput">Steam store URL
         <input type="url" id="urlInput" placeholder="https://store.steampowered.com/app/…" required autocomplete="off" spellcheck="false">
       </label>
-      <label for="dateInput">Hall of Fall date
+      <label for="dateInput">Hall of Fame date
         <input type="date" id="dateInput">
       </label>
       <button class="btn" id="addBtn" type="submit" disabled>Add</button>
@@ -150,7 +150,7 @@ async function render(){
       .order("hall_of_famed_on",{ascending:true}).order("title");
     if(error) throw error;
     gallery.innerHTML = data && data.length ? data.map(card).join("") :
-      `<div class="empty"><strong>The Hall of Fall starts here</strong>Add a Steam game below to give it a place in BHOF.</div>`;
+      `<div class="empty"><strong>The Hall of Fame starts here</strong>Add a Steam game below to give it a place in BHOF.</div>`;
     wireImages();
   }finally{ gallery.setAttribute("aria-busy","false"); }
 }
