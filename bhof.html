@@ -40,6 +40,7 @@
   @keyframes broforceShine{0%,15%{background-position:100% 50%}75%,100%{background-position:0% 50%}}
   @media(prefers-reduced-motion:reduce){.broforce{animation:none;background-position:50% 50%}}
   .tagline{color:var(--muted);font-size:14.5px}
+  .broforced{font-family:"Chakra Petch",sans-serif;font-weight:700;color:#fff;white-space:nowrap}
   .gallery{margin-top:24px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
   .card{min-width:0;background:var(--card);border:1px solid var(--line-soft);border-radius:var(--r);overflow:hidden}
   .art{display:block;width:100%;aspect-ratio:460/215;object-fit:cover;background:linear-gradient(135deg,#2f3440,#15202b)}
@@ -70,7 +71,7 @@
     <a href="bhof.html" class="on" aria-current="page">BHOF</a>
   </nav>
   <h1><span class="broforce">Broforce</span> Hall of Fame</h1>
-  <p class="tagline">Here we remember all the games that have been broforced.</p>
+  <p class="tagline">Here we remember all the games that have been <span class="broforced"><span class="broforce">broforce</span>d</span>.</p>
 
   <section class="gallery" id="gallery" aria-label="Hall of Fame games" aria-busy="true">
     <div class="empty">Loading the Hall of Fame…</div>
