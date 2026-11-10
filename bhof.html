@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Broforce Hall of Fall · The Backlog Ballot</title>
+<title>Broforce Hall of Fall</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,10 +26,8 @@
   .nav a{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;padding:7px 14px;border-radius:8px;color:var(--muted)}
   .nav a.on{background:var(--accent);color:var(--accent-ink)}
   .nav a:not(.on):hover{color:var(--text)}
-  .eyebrow{font-family:"Chakra Petch",sans-serif;font-weight:600;letter-spacing:.26em;text-transform:uppercase;font-size:12px;color:var(--accent)}
-  h1{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:clamp(34px,8vw,52px);line-height:1.05;letter-spacing:-.01em;margin:.28em 0 .15em}
+  h1{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:clamp(22px,6vw,44px);line-height:1.15;letter-spacing:-.01em;margin:.28em 0 .15em;white-space:nowrap}
   .broforce{display:inline-block;color:var(--accent)}
-  .hall-title{display:block;font-size:.7em;line-height:1.3;margin-top:4px}
   @supports (background-clip:text) or (-webkit-background-clip:text){
     .broforce{
       background:linear-gradient(110deg,#c68a21 0%,#f6c453 35%,#fff0b0 44%,#fff 50%,#fff0b0 56%,#f6c453 65%,#c68a21 100%);
@@ -54,18 +52,17 @@
   .empty{grid-column:1/-1;text-align:center;padding:48px 20px;border:1px dashed var(--line);border-radius:var(--r);color:var(--muted)}
   .empty strong{display:block;font-family:"Chakra Petch",sans-serif;font-size:18px;color:var(--text);margin-bottom:6px}
   .add{margin-top:28px;padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
-  .add h2{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 14px}
-  .fields{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px}
+  .fields{display:grid;grid-template-columns:minmax(0,1fr) 170px auto;gap:12px;align-items:end}
   label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);min-width:0}
   input{font-family:inherit;font-size:14px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0}
   a:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-  .hint{margin:10px 0 14px;font-size:12px;color:var(--muted)}
+  .hint{margin:10px 0 0;font-size:12px;color:var(--muted)}
   .btn{font-family:"Chakra Petch",sans-serif;font-weight:600;font-size:14px;cursor:pointer;border-radius:10px;padding:10px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
   .btn:hover{filter:brightness(1.08)}
   .btn:disabled{opacity:.5;cursor:default}
   #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);padding:11px 18px;border-radius:12px;font-size:13.5px;box-shadow:0 14px 40px -16px #000;opacity:0;pointer-events:none;max-width:90vw;width:max-content}
   #toast.show{opacity:1}
-  @media(max-width:560px){.gallery,.fields{grid-template-columns:1fr}.gallery{gap:14px}.btn{width:100%}}
+  @media(max-width:560px){.gallery{grid-template-columns:1fr;gap:14px}.fields{grid-template-columns:minmax(0,1fr) auto}.fields label:first-child{grid-column:1/-1}}
 </style>
 
 <main class="wrap">
@@ -74,16 +71,14 @@
     <a href="boardgames.html">Board games</a>
     <a href="bhof.html" class="on" aria-current="page">BHOF</a>
   </nav>
-  <div class="eyebrow">The Backlog Ballot</div>
-  <h1><span class="broforce">Broforce</span> <span class="hall-title">Hall of Fall</span></h1>
-  <p class="tagline">Our gaming Hall of Fall.</p>
+  <h1><span class="broforce">Broforce</span> Hall of Fall</h1>
+  <p class="tagline">Here we remember all the games that have been broforced.</p>
 
   <section class="gallery" id="gallery" aria-label="Hall of Fall games" aria-busy="true">
     <div class="empty">Loading the Hall of Fall…</div>
   </section>
 
-  <form class="add" id="addForm">
-    <h2>Add to the Hall of Fall</h2>
+  <form class="add" id="addForm" aria-label="Add a game to Broforce Hall of Fall">
     <div class="fields">
       <label for="urlInput">Steam store URL
         <input type="url" id="urlInput" placeholder="https://store.steampowered.com/app/…" required autocomplete="off" spellcheck="false">
@@ -91,9 +86,9 @@
       <label for="dateInput">Hall of Fall date
         <input type="date" id="dateInput" aria-describedby="dateHint">
       </label>
+      <button class="btn" id="addBtn" type="submit" disabled>Add</button>
     </div>
     <p class="hint" id="dateHint">Leave the date blank to use today's date.</p>
-    <button class="btn" id="addBtn" type="submit" disabled>Add to BHOF</button>
   </form>
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -192,7 +187,7 @@ async function addGame(event){
     await render();
     toast(game.title + " added to BHOF.");
   }catch(error){ toast(error.message || "Couldn't add this game."); }
-  finally{ saving = false;btn.disabled = false;btn.textContent = "Add to BHOF"; }
+  finally{ saving = false;btn.disabled = false;btn.textContent = "Add"; }
 }
 function toast(message){
   const el = document.getElementById("toast");
